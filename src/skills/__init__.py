@@ -1,0 +1,1 @@
+"""Role-scoped skills package."""

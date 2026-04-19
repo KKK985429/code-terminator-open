@@ -1,0 +1,215 @@
+{
+  "meta": {
+    "name": "leader_20_queries_concurrent_run",
+    "run_tag": "fast20-rerun",
+    "started_at": "2026-04-15T18:02:26.659006+00:00",
+    "ended_at": "2026-04-15T18:04:54.917856+00:00",
+    "total_queries": 20,
+    "concurrency": 20,
+    "step_timeout_seconds": 25,
+    "ok": 0,
+    "timeout": 20,
+    "fail": 0
+  },
+  "summary": {
+    "session_maintenance": {
+      "thread_strategy": "isolated_per_query",
+      "thread_prefix": "fast20-rerun",
+      "thread_count": 20
+    },
+    "categories": {
+      "daily_chat": {
+        "total": 4,
+        "ok": 0,
+        "timeout": 4,
+        "fail": 0
+      },
+      "chat_then_full_task": {
+        "total": 4,
+        "ok": 0,
+        "timeout": 4,
+        "fail": 0
+      },
+      "chat_then_incomplete_task": {
+        "total": 4,
+        "ok": 0,
+        "timeout": 4,
+        "fail": 0
+      },
+      "direct_full_task": {
+        "total": 4,
+        "ok": 0,
+        "timeout": 4,
+        "fail": 0
+      },
+      "incomplete_then_refine": {
+        "total": 4,
+        "ok": 0,
+        "timeout": 4,
+        "fail": 0
+      }
+    }
+  },
+  "steps": [
+    {
+      "index": 1,
+      "category": "daily_chat",
+      "thread_id": "fast20-rerun-q01",
+      "query": "你好，今天天气不错，随便聊两句。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 2,
+      "category": "daily_chat",
+      "thread_id": "fast20-rerun-q02",
+      "query": "你觉得提高开发效率最关键的点是什么？",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 3,
+      "category": "daily_chat",
+      "thread_id": "fast20-rerun-q03",
+      "query": "我有点焦虑，先不谈任务，聊聊节奏管理。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 4,
+      "category": "daily_chat",
+      "thread_id": "fast20-rerun-q04",
+      "query": "你能简短介绍下你能帮我做什么吗？",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 5,
+      "category": "chat_then_full_task",
+      "thread_id": "fast20-rerun-q05",
+      "query": "刚才聊完了，现在开始：repo_url=https://github.com/acme/runtime-repo，new_repo=false，做迭代计划。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 6,
+      "category": "chat_then_full_task",
+      "thread_id": "fast20-rerun-q06",
+      "query": "接上文，请把 issue triage 和 PR review 拆分到具体步骤。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 7,
+      "category": "chat_then_full_task",
+      "thread_id": "fast20-rerun-q07",
+      "query": "继续：给我输出任务优先级和里程碑。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 8,
+      "category": "chat_then_full_task",
+      "thread_id": "fast20-rerun-q08",
+      "query": "再补充：请给出 dispatch 队列。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 9,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "fast20-rerun-q09",
+      "query": "先简单聊聊，再帮我安排开发任务。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 10,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "fast20-rerun-q10",
+      "query": "好的，开始做任务分解吧。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 11,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "fast20-rerun-q11",
+      "query": "给我出个初版排期。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 12,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "fast20-rerun-q12",
+      "query": "继续细化。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 13,
+      "category": "direct_full_task",
+      "thread_id": "fast20-rerun-q13",
+      "query": "任务：repo_url=https://github.com/acme/ops-tool，new_repo=false。制定里程碑和验收标准。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 14,
+      "category": "direct_full_task",
+      "thread_id": "fast20-rerun-q14",
+      "query": "任务：repo_url=https://github.com/acme/web-platform，new_repo=false。生成发布前回归计划。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 15,
+      "category": "direct_full_task",
+      "thread_id": "fast20-rerun-q15",
+      "query": "任务：repo_url=https://github.com/acme/service-core，new_repo=false。拆解 bugfix 冲刺计划。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 16,
+      "category": "direct_full_task",
+      "thread_id": "fast20-rerun-q16",
+      "query": "任务：repo_url=https://github.com/acme/agent-sandbox，new_repo=true。输出初始化任务清单。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 17,
+      "category": "incomplete_then_refine",
+      "thread_id": "fast20-rerun-q17",
+      "query": "直接开始做项目任务分解。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 18,
+      "category": "incomplete_then_refine",
+      "thread_id": "fast20-rerun-q18",
+      "query": "补充信息：repo_url=https://github.com/acme/data-pipeline。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 19,
+      "category": "incomplete_then_refine",
+      "thread_id": "fast20-rerun-q19",
+      "query": "再补充：new_repo=false。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    },
+    {
+      "index": 20,
+      "category": "incomplete_then_refine",
+      "thread_id": "fast20-rerun-q20",
+      "query": "现在输出最终计划和 dispatch_queue。",
+      "status": "timeout",
+      "exception": "timeout after 25s"
+    }
+  ]
+}

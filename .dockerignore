@@ -1,0 +1,10 @@
+.git
+.docker
+.memory
+.pytest_cache
+.ruff_cache
+.venv
+__pycache__
+artifacts
+node_modules
+web/node_modules

@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/tmp/envcheck-venv/lib/python3.12/site-packages/fastapi/__main__.py", line 3, in <module>
+    main()
+  File "/tmp/envcheck-venv/lib/python3.12/site-packages/fastapi/cli.py", line 12, in main
+    raise RuntimeError(message)  # noqa: B904
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: To use the fastapi command, please install "fastapi[standard]":
+
+	pip install "fastapi[standard]"
+
+To use the fastapi command, please install "fastapi[standard]":
+
+	pip install "fastapi[standard]"
+

@@ -1,0 +1,29 @@
+usage: main.py [-h] --task TASK [--thread-id THREAD_ID] [--resume]
+               [--checkpoint-id CHECKPOINT_ID]
+               [--event-type {user_input,subagent_result}]
+               [--event-task-id EVENT_TASK_ID]
+               [--event-status {pending,in_progress,completed,failed}]
+               [--event-role {worker,reviewer}]
+               [--event-details EVENT_DETAILS] [--run-tag RUN_TAG]
+
+Run LangGraph multi-agent skeleton.
+
+options:
+  -h, --help            show this help message and exit
+  --task TASK           Input task for leader orchestration.
+  --thread-id THREAD_ID
+                        Thread identifier used by LangGraph checkpointing.
+  --resume              Resume execution from existing checkpoint state for
+                        the thread.
+  --checkpoint-id CHECKPOINT_ID
+                        Optional checkpoint id to resume from.
+  --event-type {user_input,subagent_result}
+                        Event type used to wake leader runtime.
+  --event-task-id EVENT_TASK_ID
+                        Task id for subagent_result events.
+  --event-status {pending,in_progress,completed,failed}
+                        Target status for subagent_result events.
+  --event-role {worker,reviewer}
+  --event-details EVENT_DETAILS
+                        Details for subagent_result events.
+  --run-tag RUN_TAG     Run tag used by application logging.

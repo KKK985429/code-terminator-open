@@ -1,0 +1,58 @@
+[project]
+name = "code-terminator"
+version = "0.1.0"
+description = "Minimal multi-agent skeleton with LangGraph"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "jinja2>=3.1.4",
+  "langchain>=0.3.0",
+  "langgraph>=0.2.39",
+  "langgraph-checkpoint-sqlite>=2.0.0",
+  "pydantic>=2.8.2",
+  "chromadb>=0.5.23",
+  "openai>=1.51.0",
+  "python-dotenv>=1.0.1",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.31.0",
+  "socksio>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+  "black>=25.1.0",
+  "isort>=6.0.1",
+  "mypy>=1.18.2",
+  "pytest>=8.3.3",
+]
+
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src", "src/datagov", "checkpoint"]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+src_paths = ["src", "tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+pretty = true
+exclude = '''(?x)(
+    ^src/(?!datagov/).*
+)'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests/bootstrap"]
+pythonpath = ["."]

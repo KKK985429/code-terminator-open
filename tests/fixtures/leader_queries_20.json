@@ -1,0 +1,22 @@
+[
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/payments-api，new_repo=false）。请为该仓库新增 issue 模板并区分 bug 与 feature request，输出可直接创建到 GitHub 的 issue 草案。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/frontend-dashboard，new_repo=false）。请整理最近三次失败 CI 并生成修复优先级列表，包含 owner 建议和预计工时。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/mobile-app，new_repo=false）。请为 v0.2 创建 milestone 计划并拆解为可分派任务，标注依赖关系。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/infra-terraform，new_repo=false）。请分析最近 5 个 PR 的 review 延迟，给出流程优化提案与验收指标。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/data-pipeline，new_repo=false）。请建立 release checklist（changelog、tag、artifact、回滚），并按优先级拆任务。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/legacy-monolith，new_repo=false）。请识别高风险待办并生成本周处理顺序，附风险说明。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/order-service，new_repo=false）。请设计 hotfix 2 小时回滚流程，拆成 worker/reviewer 子任务。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/docs-portal，new_repo=false）。请针对 docs 目录制定结构化重构计划并给出 PR 分批策略。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/support-tools，new_repo=false）。请识别重复 issue 并合并为统一跟踪任务清单。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/backend-core，new_repo=false）。请生成新人 onboarding 首周任务清单并映射到 issue。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/security-agent，new_repo=false）。请把安全扫描告警转为可执行任务，按严重级别排序。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/sprint-board，new_repo=false）。请制定本周迭代 standup 输出模板并定义每日同步任务。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/platform-sdk，new_repo=false）。请给出 reviewer 轮值策略，减少单点阻塞并定义 fallback 机制。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/reporting-engine，new_repo=false）。请梳理 dependency 升级路线并标记 breaking 风险。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/customer-bugs，new_repo=false）。请将 customer bug 反馈映射到 roadmap 并生成优先级任务池。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/db-migrations，new_repo=false）。请为数据库迁移建立预演与回滚子任务并指定检查点。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/mono-repo，new_repo=false）。请为 frontend/backend 分别制定交付检查项与 owner 分配建议。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/build-system，new_repo=false）。请建立 nightly build 失败后的自动分派规则与升级路径。",
+  "任务目标：在现有仓库执行（repo_url=https://github.com/acme/tech-debt-tracker，new_repo=false）。请把技术债拆解为三周可交付计划并按周输出 issue 列表。",
+  "任务目标：新建仓库（repo_url=https://github.com/acme/pr-quality-initiative，new_repo=true）。请先创建仓库初始化任务，再发起 PR 质量专项（测试覆盖率与可维护性）执行计划。"
+]

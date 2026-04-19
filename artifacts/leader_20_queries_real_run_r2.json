@@ -1,0 +1,388 @@
+{
+  "meta": {
+    "name": "leader_20_queries_real_run",
+    "started_at": "2026-04-15T17:37:42.824959+00:00",
+    "ended_at": "2026-04-15T17:53:29.712160+00:00",
+    "total_queries": 20,
+    "successful_queries": 2,
+    "failed_queries": 18
+  },
+  "summary": {
+    "categories": [
+      "chat_then_full_task",
+      "chat_then_incomplete_task",
+      "daily_chat",
+      "direct_full_task",
+      "incomplete_then_refine"
+    ],
+    "threads": [
+      "r2-c1-daily-001",
+      "r2-c1-daily-002",
+      "r2-c1-daily-003",
+      "r2-c1-daily-004",
+      "r2-c2-chat-full-001",
+      "r2-c3-chat-incomplete-001",
+      "r2-c4-full-001",
+      "r2-c4-full-002",
+      "r2-c4-full-003",
+      "r2-c4-full-004",
+      "r2-c5-refine-001"
+    ]
+  },
+  "steps": [
+    {
+      "index": 1,
+      "category": "daily_chat",
+      "thread_id": "r2-c1-daily-001",
+      "resume": false,
+      "query": "你好，今天状态怎么样？",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 2,
+      "category": "daily_chat",
+      "thread_id": "r2-c1-daily-002",
+      "resume": false,
+      "query": "你能简单介绍下你是做什么的吗？",
+      "final_output": "为开始执行任务，我还缺少关键信息：repo_url、new_repo、具体任务目标。请补充后我再生成并分发计划。",
+      "plan_item_count": 0,
+      "dispatch_queue_count": 0,
+      "errors": [],
+      "result": {
+        "task": "你能简单介绍下你是做什么的吗？",
+        "task_units": [],
+        "worker_outputs": [],
+        "reviewer_outputs": [],
+        "final_output": "为开始执行任务，我还缺少关键信息：repo_url、new_repo、具体任务目标。请补充后我再生成并分发计划。",
+        "errors": [],
+        "core_memory": {
+          "system_state": {
+            "phase": "planning"
+          },
+          "user_preferences": {},
+          "workflow": {
+            "active_env": "uv/.venv",
+            "chat_response": "为开始执行任务，我还缺少关键信息：repo_url、new_repo、具体任务目标。请补充后我再生成并分发计划。",
+            "last_event": {
+              "event_id": "evt-c062b166",
+              "event_type": "user_input",
+              "payload": {
+                "message": "你能简单介绍下你是做什么的吗？"
+              },
+              "created_at": "2026-04-15T17:38:20+00:00"
+            },
+            "plan_item_count": 0,
+            "plan_snapshot": [],
+            "list_plan": "No plan items.",
+            "dispatch_queue": []
+          },
+          "plan_items_snapshot": [],
+          "event_log_tail": [
+            {
+              "event_id": "evt-c062b166",
+              "event_type": "user_input",
+              "payload": {
+                "message": "你能简单介绍下你是做什么的吗？"
+              },
+              "created_at": "2026-04-15T17:38:20+00:00"
+            }
+          ]
+        },
+        "plan_items": [],
+        "event_log": [
+          {
+            "event_id": "evt-c062b166",
+            "event_type": "user_input",
+            "payload": {
+              "message": "你能简单介绍下你是做什么的吗？"
+            },
+            "created_at": "2026-04-15T17:38:20+00:00"
+          }
+        ],
+        "current_event": null,
+        "dispatch_queue": []
+      }
+    },
+    {
+      "index": 3,
+      "category": "daily_chat",
+      "thread_id": "r2-c1-daily-003",
+      "resume": false,
+      "query": "我最近效率有点低，先随便聊两句。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 4,
+      "category": "daily_chat",
+      "thread_id": "r2-c1-daily-004",
+      "resume": false,
+      "query": "你觉得做项目最先要做什么？",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 5,
+      "category": "chat_then_full_task",
+      "thread_id": "r2-c2-chat-full-001",
+      "resume": false,
+      "query": "这周有点忙，先聊聊怎么安排时间。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 6,
+      "category": "chat_then_full_task",
+      "thread_id": "r2-c2-chat-full-001",
+      "resume": true,
+      "query": "我想把节奏拉起来，先别着急开工。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 7,
+      "category": "chat_then_full_task",
+      "thread_id": "r2-c2-chat-full-001",
+      "resume": true,
+      "query": "好，开始任务：repo_url=https://github.com/acme/runtime-repo，new_repo=false，做 issue triage 和 PR review 计划。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 8,
+      "category": "chat_then_full_task",
+      "thread_id": "r2-c2-chat-full-001",
+      "resume": true,
+      "query": "继续细化成可执行步骤，并给出优先级。",
+      "exception": "Error executing plan: Internal error: Error finding id"
+    },
+    {
+      "index": 9,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "r2-c3-chat-incomplete-001",
+      "resume": false,
+      "query": "今天先轻松一点，简单聊下项目推进。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 10,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "r2-c3-chat-incomplete-001",
+      "resume": true,
+      "query": "我们准备开工了。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 11,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "r2-c3-chat-incomplete-001",
+      "resume": true,
+      "query": "请你直接安排开发任务。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 12,
+      "category": "chat_then_incomplete_task",
+      "thread_id": "r2-c3-chat-incomplete-001",
+      "resume": true,
+      "query": "先给我一个初版分工。",
+      "final_output": "为开始执行任务，我还缺少关键信息：repo_url、new_repo、具体任务目标。请补充后我再生成并分发计划。",
+      "plan_item_count": 0,
+      "dispatch_queue_count": 0,
+      "errors": [],
+      "result": {
+        "task": "今天先轻松一点，简单聊下项目推进。",
+        "task_units": [],
+        "worker_outputs": [],
+        "reviewer_outputs": [],
+        "final_output": "为开始执行任务，我还缺少关键信息：repo_url、new_repo、具体任务目标。请补充后我再生成并分发计划。",
+        "errors": [],
+        "core_memory": {
+          "system_state": {
+            "phase": "planning"
+          },
+          "user_preferences": {},
+          "workflow": {
+            "active_env": "uv/.venv",
+            "chat_response": "为开始执行任务，我还缺少关键信息：repo_url、new_repo、具体任务目标。请补充后我再生成并分发计划。",
+            "last_event": {
+              "event_id": "evt-89040137",
+              "event_type": "user_input",
+              "payload": {
+                "message": "先给我一个初版分工。"
+              },
+              "created_at": "2026-04-15T17:47:05+00:00"
+            },
+            "plan_item_count": 0,
+            "plan_snapshot": [],
+            "list_plan": "No plan items.",
+            "dispatch_queue": []
+          },
+          "plan_items_snapshot": [],
+          "event_log_tail": [
+            {
+              "event_id": "evt-f87d1c95",
+              "event_type": "user_input",
+              "payload": {
+                "message": "今天先轻松一点，简单聊下项目推进。"
+              },
+              "created_at": "2026-04-15T17:29:15+00:00"
+            },
+            {
+              "event_id": "evt-ef0c5a77",
+              "event_type": "user_input",
+              "payload": {
+                "message": "我们准备开工了。"
+              },
+              "created_at": "2026-04-15T17:29:43+00:00"
+            },
+            {
+              "event_id": "evt-9d777150",
+              "event_type": "user_input",
+              "payload": {
+                "message": "请你直接安排开发任务。"
+              },
+              "created_at": "2026-04-15T17:30:26+00:00"
+            },
+            {
+              "event_id": "evt-d4614133",
+              "event_type": "user_input",
+              "payload": {
+                "message": "先给我一个初版分工。"
+              },
+              "created_at": "2026-04-15T17:31:10+00:00"
+            },
+            {
+              "event_id": "evt-7dd52cec",
+              "event_type": "user_input",
+              "payload": {
+                "message": "请你直接安排开发任务。"
+              },
+              "created_at": "2026-04-15T17:46:29+00:00"
+            },
+            {
+              "event_id": "evt-89040137",
+              "event_type": "user_input",
+              "payload": {
+                "message": "先给我一个初版分工。"
+              },
+              "created_at": "2026-04-15T17:47:05+00:00"
+            }
+          ]
+        },
+        "plan_items": [],
+        "event_log": [
+          {
+            "event_id": "evt-f87d1c95",
+            "event_type": "user_input",
+            "payload": {
+              "message": "今天先轻松一点，简单聊下项目推进。"
+            },
+            "created_at": "2026-04-15T17:29:15+00:00"
+          },
+          {
+            "event_id": "evt-ef0c5a77",
+            "event_type": "user_input",
+            "payload": {
+              "message": "我们准备开工了。"
+            },
+            "created_at": "2026-04-15T17:29:43+00:00"
+          },
+          {
+            "event_id": "evt-9d777150",
+            "event_type": "user_input",
+            "payload": {
+              "message": "请你直接安排开发任务。"
+            },
+            "created_at": "2026-04-15T17:30:26+00:00"
+          },
+          {
+            "event_id": "evt-d4614133",
+            "event_type": "user_input",
+            "payload": {
+              "message": "先给我一个初版分工。"
+            },
+            "created_at": "2026-04-15T17:31:10+00:00"
+          },
+          {
+            "event_id": "evt-7dd52cec",
+            "event_type": "user_input",
+            "payload": {
+              "message": "请你直接安排开发任务。"
+            },
+            "created_at": "2026-04-15T17:46:29+00:00"
+          },
+          {
+            "event_id": "evt-89040137",
+            "event_type": "user_input",
+            "payload": {
+              "message": "先给我一个初版分工。"
+            },
+            "created_at": "2026-04-15T17:47:05+00:00"
+          }
+        ],
+        "current_event": null,
+        "dispatch_queue": []
+      }
+    },
+    {
+      "index": 13,
+      "category": "direct_full_task",
+      "thread_id": "r2-c4-full-001",
+      "resume": false,
+      "query": "任务：repo_url=https://github.com/acme/ops-tool，new_repo=false。请制定里程碑计划并拆解到 worker/reviewer。",
+      "exception": "Error executing plan: Internal error: Error finding id"
+    },
+    {
+      "index": 14,
+      "category": "direct_full_task",
+      "thread_id": "r2-c4-full-002",
+      "resume": false,
+      "query": "任务目标：repo_url=https://github.com/acme/web-platform，new_repo=false。生成发布前测试与回归计划。",
+      "exception": "Error executing plan: Internal error: Error finding id"
+    },
+    {
+      "index": 15,
+      "category": "direct_full_task",
+      "thread_id": "r2-c4-full-003",
+      "resume": false,
+      "query": "请执行：repo_url=https://github.com/acme/agent-sandbox，new_repo=true。给出初始化开发任务清单。",
+      "exception": "Error executing plan: Internal error: Error finding id"
+    },
+    {
+      "index": 16,
+      "category": "direct_full_task",
+      "thread_id": "r2-c4-full-004",
+      "resume": false,
+      "query": "在仓库 repo_url=https://github.com/acme/service-core，new_repo=false 上，建立 bugfix 冲刺计划。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 17,
+      "category": "incomplete_then_refine",
+      "thread_id": "r2-c5-refine-001",
+      "resume": false,
+      "query": "请马上开始做项目任务分解。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 18,
+      "category": "incomplete_then_refine",
+      "thread_id": "r2-c5-refine-001",
+      "resume": true,
+      "query": "补充：repo_url=https://github.com/acme/data-pipeline。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 19,
+      "category": "incomplete_then_refine",
+      "thread_id": "r2-c5-refine-001",
+      "resume": true,
+      "query": "再补充：new_repo=false。",
+      "exception": "step timeout after 35s"
+    },
+    {
+      "index": 20,
+      "category": "incomplete_then_refine",
+      "thread_id": "r2-c5-refine-001",
+      "resume": true,
+      "query": "现在请输出完整计划并给出 dispatch 队列。",
+      "exception": "step timeout after 35s"
+    }
+  ]
+}

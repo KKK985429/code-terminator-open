@@ -1,0 +1,1 @@
+"""code-terminator source package."""

@@ -1,0 +1,10 @@
+{
+  "name": "code-terminator-dev",
+  "private": true,
+  "scripts": {
+    "dev": "BACKEND_PORT=18000 concurrently -k -n frontend,backend \"npm --prefix web run dev -- --port 5174\" \"bash scripts/dev-backend.sh\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

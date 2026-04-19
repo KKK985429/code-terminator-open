@@ -1,0 +1,21 @@
+diff --git a/pyproject.toml b/pyproject.toml
+index 61735b4..7045d4d 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -15,6 +15,7 @@ dependencies = [
+   "python-dotenv>=1.0.1",
+   "fastapi>=0.115.0",
+   "uvicorn>=0.31.0",
++  "socksio>=1.0.0",
+ ]
+ 
+ [dependency-groups]
+@@ -27,7 +28,7 @@ requires = ["hatchling>=1.25.0"]
+ build-backend = "hatchling.build"
+ 
+ [tool.hatch.build.targets.wheel]
+-packages = ["src"]
++packages = ["src", "checkpoint"]
+ 
+ [tool.pytest.ini_options]
+ testpaths = ["tests"]
