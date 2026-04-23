@@ -1,0 +1,272 @@
+version: "3.9"
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  networks:
+    - ecom-net
+  env_file:
+    - .env
+  logging:
+    driver: json-file
+    options:
+      max-size: "50m"
+      max-file: "5"
+
+x-healthcheck: &default-healthcheck
+  interval: 10s
+  timeout: 5s
+  retries: 3
+  start_period: 20s
+
+services:
+  postgres:
+    <<: *service-defaults
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecom
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD-SHELL", "pg_isready -U ecom -d ecommerce"]
+
+  redis:
+    <<: *service-defaults
+    image: redis:7-alpine
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --save 60 1000
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "redis-cli", "ping"]
+
+  minio:
+    <<: *service-defaults
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  order-service-a:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/order/Dockerfile
+    environment:
+      SERVICE_NAME: order-service-a
+      BUG_INDEX_ERROR: ${BUG_INDEX_ERROR:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+
+  inventory-service-a:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/inventory/Dockerfile
+    environment:
+      SERVICE_NAME: inventory-service-a
+      BUG_RACE_CONDITION: ${BUG_RACE_CONDITION:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+
+  payment-service-a:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/payment/Dockerfile
+    environment:
+      SERVICE_NAME: payment-service-a
+      BUG_FLOAT_PRECISION: ${BUG_FLOAT_PRECISION:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+
+  user-service-a:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/user/Dockerfile
+    environment:
+      SERVICE_NAME: user-service-a
+      BUG_NULL_VIP: ${BUG_NULL_VIP:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+
+  order-service-b:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/order/Dockerfile
+    environment:
+      SERVICE_NAME: order-service-b
+      BUG_INDEX_ERROR: ${BUG_INDEX_ERROR:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+
+  inventory-service-b:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/inventory/Dockerfile
+    environment:
+      SERVICE_NAME: inventory-service-b
+      BUG_RACE_CONDITION: ${BUG_RACE_CONDITION:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+
+  payment-service-b:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/payment/Dockerfile
+    environment:
+      SERVICE_NAME: payment-service-b
+      BUG_FLOAT_PRECISION: ${BUG_FLOAT_PRECISION:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+
+  user-service-b:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: services/user/Dockerfile
+    environment:
+      SERVICE_NAME: user-service-b
+      BUG_NULL_VIP: ${BUG_NULL_VIP:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *default-healthcheck
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+
+  celery-worker:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: celery_app/Dockerfile
+    command: >
+      celery -A celery_app.celery_config:app worker
+      --loglevel=info
+      --queues=inventory,payments,maintenance
+      --autoscale=8,2
+      --max-tasks-per-child=1000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: celery_app/Dockerfile
+    command: celery -A celery_app.celery_config:app beat --loglevel=info
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  nginx:
+    <<: *service-defaults
+    image: nginx:1.25-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - order-service-a
+      - inventory-service-a
+      - payment-service-a
+      - user-service-a
+
+  prometheus:
+    <<: *service-defaults
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
+    ports:
+      - "9090:9090"
+
+  locust:
+    <<: *service-defaults
+    image: locustio/locust:2.31.8
+    command: >
+      -f /mnt/locust/locustfile.py
+      --host http://nginx
+    volumes:
+      - ./traffic:/mnt/locust
+    ports:
+      - "8089:8089"
+    depends_on:
+      - nginx
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  nginx_logs:
+
+networks:
+  ecom-net:
+    driver: bridge
