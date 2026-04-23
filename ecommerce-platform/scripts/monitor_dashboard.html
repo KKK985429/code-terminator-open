@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Festival Traffic Command</title>
+    <style>
+      :root {
+        --paper: #f5ecdf;
+        --paper-deep: #eadbc6;
+        --ink: #111111;
+        --muted: #6e6256;
+        --line: rgba(17, 17, 17, 0.08);
+        --panel: rgba(255, 250, 243, 0.78);
+        --panel-strong: rgba(255, 252, 247, 0.92);
+        --accent: #ff5a36;
+        --accent-deep: #cb3618;
+        --gold: #f4b840;
+        --mint: #10906f;
+        --mint-soft: rgba(16, 144, 111, 0.12);
+        --danger: #d94a4a;
+        --danger-soft: rgba(217, 74, 74, 0.12);
+        --shadow: 0 26px 80px rgba(82, 47, 18, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--ink);
+        font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at 12% 18%, rgba(255, 90, 54, 0.18), transparent 28%),
+          radial-gradient(circle at 88% 8%, rgba(244, 184, 64, 0.18), transparent 28%),
+          radial-gradient(circle at 48% 110%, rgba(16, 144, 111, 0.12), transparent 26%),
+          linear-gradient(180deg, #fff8ef 0%, var(--paper) 55%, var(--paper-deep) 100%);
+      }
+
+      .shell {
+        width: min(1500px, calc(100vw - 28px));
+        margin: 18px auto 32px;
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 26px;
+        border-radius: 30px;
+        border: 1px solid rgba(17, 17, 17, 0.08);
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 245, 233, 0.92)),
+          linear-gradient(135deg, rgba(255, 90, 54, 0.06), rgba(244, 184, 64, 0.08));
+        box-shadow: var(--shadow);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -12%;
+        bottom: -58%;
+        width: 460px;
+        height: 460px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 90, 54, 0.16), transparent 68%);
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: rgba(17, 17, 17, 0.06);
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .pulse {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: pulse 1.6s infinite;
+        box-shadow: 0 0 0 rgba(255, 90, 54, 0.4);
+      }
+
+      @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255, 90, 54, 0.45); }
+        70% { box-shadow: 0 0 0 14px rgba(255, 90, 54, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 90, 54, 0); }
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 0.86fr;
+        gap: 22px;
+        margin-top: 18px;
+      }
+
+      h1 {
+        margin: 14px 0 10px;
+        font-size: clamp(42px, 5vw, 76px);
+        line-height: 0.92;
+        letter-spacing: -0.07em;
+      }
+
+      .hero-copy {
+        max-width: 760px;
+        color: var(--muted);
+        line-height: 1.7;
+        font-size: 15px;
+      }
+
+      .hero-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .hero-chip,
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero-chip {
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .chip-label,
+      .card-label {
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .chip-value {
+        margin-top: 8px;
+        font-size: 24px;
+        letter-spacing: -0.05em;
+      }
+
+      .hero-heat {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 290px;
+        padding: 22px;
+        border-radius: 28px;
+        background:
+          radial-gradient(circle at top, rgba(255, 90, 54, 0.18), transparent 55%),
+          linear-gradient(180deg, rgba(18, 18, 18, 0.94), rgba(50, 25, 16, 0.96));
+        color: #fff6ef;
+      }
+
+      .heat-score {
+        margin-top: 12px;
+        font-size: 92px;
+        line-height: 0.9;
+        letter-spacing: -0.09em;
+      }
+
+      .heat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .heat-metric {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .heat-meter {
+        height: 14px;
+        margin-top: 16px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.12);
+      }
+
+      .heat-fill {
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #f4b840, #ff5a36, #cb3618);
+        transition: width 0.6s ease;
+      }
+
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 999px;
+        background: rgba(17, 17, 17, 0.05);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .alert-strip {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .alert-card {
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .alert-card strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 15px;
+      }
+
+      .alert-info {
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .alert-warning {
+        background: rgba(244, 184, 64, 0.16);
+      }
+
+      .alert-critical {
+        background: rgba(217, 74, 74, 0.16);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .metric-card {
+        grid-column: span 2;
+      }
+
+      .metric-value {
+        margin-top: 10px;
+        font-size: clamp(28px, 3vw, 42px);
+        line-height: 0.98;
+        letter-spacing: -0.06em;
+      }
+
+      .metric-hint {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .chart-card {
+        grid-column: span 8;
+      }
+
+      .side-stack {
+        grid-column: span 4;
+        display: grid;
+        gap: 16px;
+      }
+
+      .triple {
+        grid-column: span 12;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .wide-card {
+        grid-column: span 8;
+      }
+
+      .narrow-card {
+        grid-column: span 4;
+      }
+
+      .chart-header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .chart-title {
+        font-size: 22px;
+        letter-spacing: -0.05em;
+      }
+
+      .chart-subtitle {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .chart-svg {
+        width: 100%;
+        height: 250px;
+        display: block;
+        border-radius: 20px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 248, 239, 0.32)),
+          repeating-linear-gradient(
+            0deg,
+            transparent 0,
+            transparent 41px,
+            rgba(17, 17, 17, 0.04) 41px,
+            rgba(17, 17, 17, 0.04) 42px
+          );
+      }
+
+      .stack-bar {
+        display: flex;
+        height: 14px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(17, 17, 17, 0.08);
+      }
+
+      .stack-segment {
+        height: 100%;
+      }
+
+      .row-list,
+      .mix-list,
+      .order-list,
+      .failure-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .row-item,
+      .mix-row,
+      .order-row,
+      .failure-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.68);
+      }
+
+      .mix-bar {
+        width: 132px;
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(17, 17, 17, 0.08);
+      }
+
+      .mix-fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--gold), var(--accent));
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 11px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .badge-up {
+        background: var(--mint-soft);
+        color: var(--mint);
+      }
+
+      .badge-down {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .mini-note {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 1220px) {
+        .hero-grid,
+        .alert-strip,
+        .grid,
+        .triple {
+          grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+
+        .hero-meta {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .metric-card,
+        .chart-card,
+        .side-stack,
+        .wide-card,
+        .narrow-card {
+          grid-column: auto;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .hero-meta {
+          grid-template-columns: 1fr;
+        }
+
+        .heat-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="eyebrow"><span class="pulse"></span> Live Festival Monitor</div>
+        <div class="hero-grid">
+          <div>
+            <h1>Double 11<br />Traffic Command</h1>
+            <p class="hero-copy">
+              这个面板直接盯住真实入口网关，展示持续流入的请求、成交、库存与服务状态。
+              右侧活动情报来自流量模拟器，左侧业务指标来自实际经过系统的在线流量。
+            </p>
+            <div class="hero-meta">
+              <div class="hero-chip">
+                <div class="chip-label">虚拟大促时钟</div>
+                <div class="chip-value" id="virtualClock">00:00</div>
+              </div>
+              <div class="hero-chip">
+                <div class="chip-label">当前阶段</div>
+                <div class="chip-value" id="currentStage">manual</div>
+              </div>
+              <div class="hero-chip">
+                <div class="chip-label">下一阶段</div>
+                <div class="chip-value" id="nextStage">--</div>
+              </div>
+              <div class="hero-chip">
+                <div class="chip-label">最近更新</div>
+                <div class="chip-value" id="lastUpdated">--:--:--</div>
+              </div>
+            </div>
+            <div class="tag-row" id="noteTags"></div>
+          </div>
+          <div class="hero-heat">
+            <div>
+              <div class="chip-label" style="color: rgba(255,246,239,0.72)">Festival Heat Index</div>
+              <div class="heat-score" id="heatScore">0</div>
+              <div class="heat-grid">
+                <div class="heat-metric">
+                  <div class="chip-label" style="color: rgba(255,246,239,0.72)">Burst</div>
+                  <div class="chip-value" id="burstLabel" style="color:#fff6ef">idle</div>
+                </div>
+                <div class="heat-metric">
+                  <div class="chip-label" style="color: rgba(255,246,239,0.72)">Event</div>
+                  <div class="chip-value" id="eventLabel" style="color:#fff6ef">manual</div>
+                </div>
+                <div class="heat-metric">
+                  <div class="chip-label" style="color: rgba(255,246,239,0.72)">Target RPS</div>
+                  <div class="chip-value" id="targetRps" style="color:#fff6ef">0</div>
+                </div>
+                <div class="heat-metric">
+                  <div class="chip-label" style="color: rgba(255,246,239,0.72)">1m Success</div>
+                  <div class="chip-value" id="simSuccessRate" style="color:#fff6ef">100%</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="heat-meter"><div class="heat-fill" id="heatFill"></div></div>
+              <div class="mini-note" style="color: rgba(255,246,239,0.72)" id="stageCountdown">
+                等待活动阶段数据
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="alert-strip" id="alertStrip"></section>
+
+      <section class="grid">
+        <article class="card metric-card">
+          <div class="card-label">Current RPS</div>
+          <div class="metric-value" id="rpsNow">0</div>
+          <div class="metric-hint" id="requests1m">1m requests: 0</div>
+        </article>
+        <article class="card metric-card">
+          <div class="card-label">Peak RPS</div>
+          <div class="metric-value" id="peakRps">0</div>
+          <div class="metric-hint" id="requests5m">5m requests: 0</div>
+        </article>
+        <article class="card metric-card">
+          <div class="card-label">P95 Latency</div>
+          <div class="metric-value" id="p95Latency">0ms</div>
+          <div class="metric-hint" id="avgLatency">1m avg: 0ms</div>
+        </article>
+        <article class="card metric-card">
+          <div class="card-label">5m Error Rate</div>
+          <div class="metric-value" id="errorRate">0%</div>
+          <div class="metric-hint" id="activeRequests">active requests: 0</div>
+        </article>
+        <article class="card metric-card">
+          <div class="card-label">5m GMV</div>
+          <div class="metric-value" id="gmv5m">¥0.00</div>
+          <div class="metric-hint" id="orders5m">5m orders: 0</div>
+        </article>
+        <article class="card metric-card">
+          <div class="card-label">Inventory Left</div>
+          <div class="metric-value" id="inventoryLeft">0</div>
+          <div class="metric-hint" id="soldQty">sold qty: 0</div>
+        </article>
+
+        <article class="card chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Ingress Traffic vs Target</div>
+              <div class="chart-subtitle">橙色为真实每秒请求，金色为模拟器目标节律，红色虚线为错误数</div>
+            </div>
+          </div>
+          <svg class="chart-svg" id="trafficChart" viewBox="0 0 900 250" preserveAspectRatio="none"></svg>
+        </article>
+
+        <div class="side-stack">
+          <article class="card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Action Mix</div>
+                <div class="chart-subtitle">最近 1 分钟真实请求动作分布</div>
+              </div>
+            </div>
+            <div class="mix-list" id="actionMixList"></div>
+            <div class="mini-note" id="actionMixTarget">目标动作配比：--</div>
+          </article>
+          <article class="card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Protocol Status</div>
+                <div class="chart-subtitle">HTTP 返回分布与订单状态结构</div>
+              </div>
+            </div>
+            <div class="stack-bar" id="httpStatusBar"></div>
+            <div class="row-list" id="httpStatusLegend" style="margin-top: 12px"></div>
+            <div style="height: 12px"></div>
+            <div class="stack-bar" id="orderStatusBar"></div>
+            <div class="row-list" id="orderStatusLegend" style="margin-top: 12px"></div>
+          </article>
+        </div>
+
+        <div class="triple">
+          <article class="card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Commerce Wave</div>
+                <div class="chart-subtitle">成交额、订单数与延迟的联动</div>
+              </div>
+            </div>
+            <svg class="chart-svg" id="commerceChart" viewBox="0 0 600 250" preserveAspectRatio="none"></svg>
+          </article>
+          <article class="card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Service Pulse</div>
+                <div class="chart-subtitle">服务探活与热点路由</div>
+              </div>
+            </div>
+            <div class="row-list" id="serviceList"></div>
+            <div style="height: 12px"></div>
+            <div class="mix-list" id="routeList"></div>
+          </article>
+          <article class="card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Stock Pressure</div>
+                <div class="chart-subtitle">最紧张库存位与累计成交</div>
+              </div>
+            </div>
+            <div class="row-list">
+              <div class="row-item"><span>Total Orders</span><strong id="totalOrders">0</strong></div>
+              <div class="row-item"><span>Total GMV</span><strong id="gmvTotal">¥0.00</strong></div>
+              <div class="row-item"><span>Known Users</span><strong id="knownUsers">0</strong></div>
+              <div class="row-item"><span>Known Orders</span><strong id="knownOrders">0</strong></div>
+            </div>
+            <div style="height: 12px"></div>
+            <div class="row-list" id="lowStockList"></div>
+          </article>
+        </div>
+
+        <article class="card wide-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Recent Orders</div>
+              <div class="chart-subtitle">最近下单流入与回放订单记录</div>
+            </div>
+          </div>
+          <div class="order-list" id="orderList"></div>
+        </article>
+
+        <article class="card narrow-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Fault Feed</div>
+              <div class="chart-subtitle">最近错误与冲击响应</div>
+            </div>
+          </div>
+          <div class="failure-list" id="failureList"></div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const els = {
+        virtualClock: document.getElementById("virtualClock"),
+        currentStage: document.getElementById("currentStage"),
+        nextStage: document.getElementById("nextStage"),
+        lastUpdated: document.getElementById("lastUpdated"),
+        noteTags: document.getElementById("noteTags"),
+        heatScore: document.getElementById("heatScore"),
+        heatFill: document.getElementById("heatFill"),
+        burstLabel: document.getElementById("burstLabel"),
+        eventLabel: document.getElementById("eventLabel"),
+        targetRps: document.getElementById("targetRps"),
+        simSuccessRate: document.getElementById("simSuccessRate"),
+        stageCountdown: document.getElementById("stageCountdown"),
+        alertStrip: document.getElementById("alertStrip"),
+        rpsNow: document.getElementById("rpsNow"),
+        requests1m: document.getElementById("requests1m"),
+        peakRps: document.getElementById("peakRps"),
+        requests5m: document.getElementById("requests5m"),
+        p95Latency: document.getElementById("p95Latency"),
+        avgLatency: document.getElementById("avgLatency"),
+        errorRate: document.getElementById("errorRate"),
+        activeRequests: document.getElementById("activeRequests"),
+        gmv5m: document.getElementById("gmv5m"),
+        orders5m: document.getElementById("orders5m"),
+        inventoryLeft: document.getElementById("inventoryLeft"),
+        soldQty: document.getElementById("soldQty"),
+        trafficChart: document.getElementById("trafficChart"),
+        commerceChart: document.getElementById("commerceChart"),
+        actionMixList: document.getElementById("actionMixList"),
+        actionMixTarget: document.getElementById("actionMixTarget"),
+        httpStatusBar: document.getElementById("httpStatusBar"),
+        httpStatusLegend: document.getElementById("httpStatusLegend"),
+        orderStatusBar: document.getElementById("orderStatusBar"),
+        orderStatusLegend: document.getElementById("orderStatusLegend"),
+        serviceList: document.getElementById("serviceList"),
+        routeList: document.getElementById("routeList"),
+        totalOrders: document.getElementById("totalOrders"),
+        gmvTotal: document.getElementById("gmvTotal"),
+        knownUsers: document.getElementById("knownUsers"),
+        knownOrders: document.getElementById("knownOrders"),
+        lowStockList: document.getElementById("lowStockList"),
+        orderList: document.getElementById("orderList"),
+        failureList: document.getElementById("failureList"),
+      };
+
+      function fmtCurrency(value) {
+        return `¥${Number(value || 0).toFixed(2)}`;
+      }
+
+      function fmtTime(unixSeconds) {
+        if (!unixSeconds) return "--:--:--";
+        const date = new Date(unixSeconds * 1000);
+        return date.toLocaleTimeString("zh-CN", { hour12: false });
+      }
+
+      function fmtVirtualHour(hour) {
+        const h = Math.floor(Number(hour || 0));
+        const m = Math.floor((Number(hour || 0) - h) * 60);
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+      }
+
+      function fmtCountdown(totalSeconds) {
+        const seconds = Math.max(0, Math.floor(Number(totalSeconds || 0)));
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${String(mins).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
+      }
+
+      function buildSeriesPath(points, valueAt, width, height, padding, maxValue) {
+        const usableWidth = width - padding * 2;
+        const usableHeight = height - padding * 2;
+        const safeMax = Math.max(maxValue, 1);
+        return points
+          .map((point, index) => {
+            const x = padding + (index / Math.max(points.length - 1, 1)) * usableWidth;
+            const y = height - padding - (valueAt(point) / safeMax) * usableHeight;
+            return `${index === 0 ? "M" : "L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
+          })
+          .join(" ");
+      }
+
+      function buildAreaPath(points, valueAt, width, height, padding, maxValue) {
+        const line = buildSeriesPath(points, valueAt, width, height, padding, maxValue);
+        return `${line} L ${width - padding} ${height - padding} L ${padding} ${height - padding} Z`;
+      }
+
+      function renderTrafficChart(points) {
+        const width = 900;
+        const height = 250;
+        const padding = 18;
+        const chartPoints = points.length ? points : [{ requests: 0, target_rps: 0, errors: 0 }];
+        const maxValue = Math.max(
+          ...chartPoints.map((point) =>
+            Math.max(Number(point.requests || 0), Number(point.target_rps || 0), Number(point.errors || 0) * 2)
+          ),
+          1
+        );
+        const actualArea = buildAreaPath(chartPoints, (point) => Number(point.requests || 0), width, height, padding, maxValue);
+        const actualLine = buildSeriesPath(chartPoints, (point) => Number(point.requests || 0), width, height, padding, maxValue);
+        const targetLine = buildSeriesPath(chartPoints, (point) => Number(point.target_rps || 0), width, height, padding, maxValue);
+        const errorLine = buildSeriesPath(chartPoints, (point) => Number(point.errors || 0), width, height, padding, maxValue);
+        els.trafficChart.innerHTML = `
+          <defs>
+            <linearGradient id="trafficAreaFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(255,90,54,0.42)"></stop>
+              <stop offset="100%" stop-color="rgba(255,90,54,0.04)"></stop>
+            </linearGradient>
+          </defs>
+          <path d="${actualArea}" fill="url(#trafficAreaFill)"></path>
+          <path d="${targetLine}" fill="none" stroke="#f4b840" stroke-width="3" stroke-dasharray="10 8" stroke-linecap="round"></path>
+          <path d="${actualLine}" fill="none" stroke="#ff5a36" stroke-width="4" stroke-linecap="round"></path>
+          <path d="${errorLine}" fill="none" stroke="#d94a4a" stroke-width="2.4" stroke-dasharray="7 7"></path>
+        `;
+      }
+
+      function renderCommerceChart(points) {
+        const width = 600;
+        const height = 250;
+        const padding = 18;
+        const chartPoints = points.length ? points : [{ gmv: 0, orders: 0, avg_latency_ms: 0 }];
+        const gmvMax = Math.max(...chartPoints.map((point) => Number(point.gmv || 0)), 1);
+        const ordersMax = Math.max(...chartPoints.map((point) => Number(point.orders || 0)), 1);
+        const latencyMax = Math.max(...chartPoints.map((point) => Number(point.avg_latency_ms || 0)), 1);
+        const gmvArea = buildAreaPath(chartPoints, (point) => Number(point.gmv || 0), width, height, padding, gmvMax);
+        const ordersLine = buildSeriesPath(chartPoints, (point) => Number(point.orders || 0), width, height, padding, ordersMax);
+        const latencyLine = buildSeriesPath(chartPoints, (point) => Number(point.avg_latency_ms || 0), width, height, padding, latencyMax);
+        els.commerceChart.innerHTML = `
+          <defs>
+            <linearGradient id="commerceAreaFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="rgba(244,184,64,0.36)"></stop>
+              <stop offset="100%" stop-color="rgba(244,184,64,0.05)"></stop>
+            </linearGradient>
+          </defs>
+          <path d="${gmvArea}" fill="url(#commerceAreaFill)"></path>
+          <path d="${ordersLine}" fill="none" stroke="#ff5a36" stroke-width="3.5" stroke-linecap="round"></path>
+          <path d="${latencyLine}" fill="none" stroke="#10906f" stroke-width="3.2" stroke-linecap="round"></path>
+        `;
+      }
+
+      function renderAlerts(alerts) {
+        const items = alerts && alerts.length
+          ? alerts
+          : [{ level: "info", title: "System steady", detail: "当前没有需要处理的主动告警。" }];
+        els.alertStrip.innerHTML = items
+          .map((alert) => `
+            <div class="alert-card alert-${alert.level || "info"}">
+              <div class="card-label">${(alert.level || "info").toUpperCase()}</div>
+              <strong>${alert.title || "--"}</strong>
+              <div class="mini-note">${alert.detail || ""}</div>
+            </div>
+          `)
+          .join("");
+      }
+
+      function renderTags(notes) {
+        els.noteTags.innerHTML = (notes && notes.length ? notes : ["监控已连接，等待阶段描述。"])
+          .map((note) => `<span class="tag">${note}</span>`)
+          .join("");
+      }
+
+      function renderMix(list, target) {
+        const items = list && list.length ? list : [["idle", 0]];
+        const max = Math.max(...items.map((item) => Number(item[1] || 0)), 1);
+        els.actionMixList.innerHTML = items
+          .map(([name, count]) => `
+            <div class="mix-row">
+              <div>
+                <div><strong>${name}</strong></div>
+                <div class="muted">${count} req / 1m</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="mix-bar"><div class="mix-fill" style="width:${(Number(count || 0) / max) * 100}%"></div></div>
+                <strong>${count}</strong>
+              </div>
+            </div>
+          `)
+          .join("");
+
+        const targetMix = target && target.length
+          ? target.map(([name, weight]) => `${name} ${weight}`).join(" · ")
+          : "--";
+        els.actionMixTarget.textContent = `目标动作配比：${targetMix}`;
+      }
+
+      function renderStatusStacks(statusCounts, orderStatusCounts) {
+        const httpPalette = { "2xx": "#10906f", "4xx": "#f4b840", "5xx": "#d94a4a" };
+        const orderPalette = { paid: "#10906f", pending: "#f4b840", cancelled: "#d94a4a" };
+
+        function renderStack(container, legend, counts, palette) {
+          const entries = Object.entries(counts || {}).filter(([, value]) => Number(value) > 0);
+          const total = entries.reduce((sum, [, value]) => sum + Number(value || 0), 0);
+          if (!entries.length) {
+            container.innerHTML = `<div class="stack-segment" style="width:100%; background:rgba(17,17,17,0.08)"></div>`;
+            legend.innerHTML = `<div class="row-item"><span class="muted">暂无数据</span><strong>0</strong></div>`;
+            return;
+          }
+          container.innerHTML = entries
+            .map(([name, value]) => `
+              <div class="stack-segment" style="width:${(Number(value) / total) * 100}%; background:${palette[name] || "#ff5a36"}"></div>
+            `)
+            .join("");
+          legend.innerHTML = entries
+            .map(([name, value]) => `
+              <div class="row-item">
+                <span>${name}</span>
+                <strong>${value}</strong>
+              </div>
+            `)
+            .join("");
+        }
+
+        renderStack(els.httpStatusBar, els.httpStatusLegend, statusCounts, httpPalette);
+        renderStack(els.orderStatusBar, els.orderStatusLegend, orderStatusCounts, orderPalette);
+      }
+
+      function renderServices(services) {
+        els.serviceList.innerHTML = (services && services.length ? services : [])
+          .map((service) => {
+            const badge = service.status === "up" ? "badge-up" : "badge-down";
+            return `
+              <div class="row-item">
+                <div>
+                  <div><strong>${service.name}</strong></div>
+                  <div class="muted">${service.latency_ms}ms probe</div>
+                </div>
+                <span class="badge ${badge}">${service.status}</span>
+              </div>
+            `;
+          })
+          .join("") || `<div class="row-item"><span class="muted">服务探活中</span><strong>--</strong></div>`;
+      }
+
+      function renderRoutes(routes) {
+        const list = routes && routes.length ? routes : [["other", 0]];
+        const max = Math.max(...list.map((item) => Number(item[1] || 0)), 1);
+        els.routeList.innerHTML = list
+          .map(([name, count]) => `
+            <div class="mix-row">
+              <div>
+                <div><strong>${name}</strong></div>
+                <div class="muted">5m route heat</div>
+              </div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="mix-bar"><div class="mix-fill" style="width:${(Number(count || 0) / max) * 100}%"></div></div>
+                <strong>${count}</strong>
+              </div>
+            </div>
+          `)
+          .join("");
+      }
+
+      function renderLowStock(lowStock) {
+        const items = lowStock && lowStock.length ? lowStock : [{ product_id: "--", available_qty: 0, sold_qty: 0 }];
+        els.lowStockList.innerHTML = items
+          .map((item) => `
+            <div class="row-item">
+              <div>
+                <div><strong>Product ${item.product_id}</strong></div>
+                <div class="muted">sold ${item.sold_qty || 0}</div>
+              </div>
+              <strong>${item.available_qty ?? 0}</strong>
+            </div>
+          `)
+          .join("");
+      }
+
+      function renderOrders(recentOrders, latestOrders) {
+        const items = recentOrders && recentOrders.length
+          ? recentOrders
+          : (latestOrders || []).map((order) => ({
+              order_id: order.id,
+              amount: order.final_amount,
+              timestamp: Date.parse(order.created_at) / 1000 || 0,
+              status: order.status || "--",
+            }));
+
+        els.orderList.innerHTML = items.length
+          ? items
+              .map((order) => `
+                <div class="order-row">
+                  <div>
+                    <div><strong>Order #${order.order_id ?? "--"}</strong></div>
+                    <div class="muted">${fmtTime(order.timestamp)} · ${order.status || "created"}</div>
+                  </div>
+                  <strong>${fmtCurrency(order.amount)}</strong>
+                </div>
+              `)
+              .join("")
+          : `<div class="order-row"><span class="muted">还没有订单流入</span></div>`;
+      }
+
+      function renderFailures(failures) {
+        const items = failures && failures.length ? failures : [];
+        els.failureList.innerHTML = items.length
+          ? items
+              .map((failure) => `
+                <div class="failure-row">
+                  <div>
+                    <div><strong>${failure.path}</strong></div>
+                    <div class="muted">${fmtTime(failure.timestamp)} · ${failure.latency_ms}ms</div>
+                  </div>
+                  <strong style="color:#d94a4a">${failure.status_code}</strong>
+                </div>
+              `)
+              .join("")
+          : `<div class="failure-row"><span class="muted">最近没有异常响应</span></div>`;
+      }
+
+      function applySnapshot(payload) {
+        const business = payload.business || {};
+        const simulator = payload.simulator || {};
+        const series = payload.series || [];
+
+        els.virtualClock.textContent = fmtVirtualHour(simulator.virtual_hour || 0);
+        els.currentStage.textContent = simulator.stage || simulator.phase || "manual";
+        els.nextStage.textContent = simulator.next_stage || "--";
+        els.lastUpdated.textContent = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+        renderTags(simulator.notes || []);
+
+        els.heatScore.textContent = payload.heat_index ?? 0;
+        els.heatFill.style.width = `${payload.heat_index ?? 0}%`;
+        els.burstLabel.textContent = simulator.burst || "idle";
+        els.eventLabel.textContent = simulator.event || "manual";
+        els.targetRps.textContent = Number(simulator.target_rps || 0).toFixed(2);
+        els.simSuccessRate.textContent = `${Number(simulator.success_rate || 100).toFixed(2)}%`;
+        els.stageCountdown.textContent = simulator.next_stage
+          ? `距离 ${simulator.next_stage} 还有 ${fmtCountdown(simulator.seconds_to_next_stage || 0)}`
+          : "等待下一阶段调度";
+
+        els.rpsNow.textContent = Number(payload.rps_now || 0).toFixed(2);
+        els.requests1m.textContent = `1m requests: ${payload.requests_1m || 0}`;
+        els.peakRps.textContent = Number(payload.peak_rps_observed || 0).toFixed(2);
+        els.requests5m.textContent = `5m requests: ${payload.requests_5m || 0}`;
+        els.p95Latency.textContent = `${Number(payload.p95_latency_ms_5m || 0).toFixed(1)}ms`;
+        els.avgLatency.textContent = `1m avg: ${Number(payload.avg_latency_ms_1m || 0).toFixed(1)}ms`;
+        els.errorRate.textContent = `${Number(payload.error_rate_5m || 0).toFixed(2)}%`;
+        els.activeRequests.textContent = `active requests: ${payload.active_requests || 0}`;
+        els.gmv5m.textContent = fmtCurrency(business.gmv_5m || 0);
+        els.orders5m.textContent = `5m orders: ${business.orders_5m || 0}`;
+        els.inventoryLeft.textContent = Number(business.inventory_available_total || 0).toLocaleString("zh-CN");
+        els.soldQty.textContent = `sold qty: ${business.sold_qty_total || 0}`;
+
+        els.totalOrders.textContent = Number(business.total_orders || 0).toLocaleString("zh-CN");
+        els.gmvTotal.textContent = fmtCurrency(business.gmv_total || 0);
+        els.knownUsers.textContent = Number(simulator.known_users || 0).toLocaleString("zh-CN");
+        els.knownOrders.textContent = Number(simulator.known_orders || 0).toLocaleString("zh-CN");
+
+        renderAlerts(payload.alerts || []);
+        renderTrafficChart(series);
+        renderCommerceChart(series);
+        renderMix(simulator.rolling_actions || [], simulator.action_mix || []);
+        renderStatusStacks(payload.status_counts || {}, business.order_status_counts || {});
+        renderServices(payload.services || []);
+        renderRoutes(payload.top_routes || []);
+        renderLowStock(business.low_stock_products || []);
+        renderOrders(payload.recent_orders || [], business.latest_orders || []);
+        renderFailures(payload.recent_failures || []);
+      }
+
+      function connectStream() {
+        const source = new EventSource("/api/monitor/stream");
+        source.addEventListener("snapshot", (event) => {
+          applySnapshot(JSON.parse(event.data));
+        });
+        source.onerror = () => {
+          source.close();
+          fetch("/api/monitor/payload")
+            .then((response) => response.json())
+            .then(applySnapshot)
+            .catch(() => undefined)
+            .finally(() => {
+              window.setTimeout(connectStream, 1500);
+            });
+        };
+      }
+
+      fetch("/api/monitor/payload")
+        .then((response) => response.json())
+        .then(applySnapshot)
+        .catch(() => undefined)
+        .finally(connectStream);
+    </script>
+  </body>
+</html>

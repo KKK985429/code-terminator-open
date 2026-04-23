@@ -1,0 +1,72 @@
+openapi: 3.0.3
+info:
+  title: Reserved Agent API
+  version: 0.1.0
+  description: >
+    Phase-one reserved contract only. The real agent service is intentionally not
+    implemented yet; gateway responses return 501.
+servers:
+  - url: http://localhost
+paths:
+  /api/agent/health:
+    get:
+      summary: Reserved health probe for future agent service
+      responses:
+        "501":
+          description: Reserved
+  /api/agent/config:
+    get:
+      summary: Reserved read endpoint for future agent configuration
+      responses:
+        "501":
+          description: Reserved
+    put:
+      summary: Reserved write endpoint for future agent configuration
+      responses:
+        "501":
+          description: Reserved
+  /api/agent/incidents:
+    get:
+      summary: Reserved incident list endpoint
+      responses:
+        "501":
+          description: Reserved
+    post:
+      summary: Reserved manual incident scan trigger
+      responses:
+        "501":
+          description: Reserved
+  /api/agent/repairs:
+    get:
+      summary: Reserved repair run list endpoint
+      responses:
+        "501":
+          description: Reserved
+    post:
+      summary: Reserved repair trigger endpoint
+      responses:
+        "501":
+          description: Reserved
+  /api/agent/repairs/{run_id}:
+    get:
+      summary: Reserved repair detail endpoint
+      parameters:
+        - in: path
+          name: run_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "501":
+          description: Reserved
+components:
+  schemas:
+    ReservedResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: reserved
+        message:
+          type: string
+          example: agent service is reserved and not implemented in this phase
