@@ -1,0 +1,28 @@
+groups:
+  - name: ecommerce_alerts
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "服务不可用: {{ $labels.job }}"
+
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{status=~"5.."}[5m]) /
+          clamp_min(rate(http_requests_total[5m]), 1) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "5xx 错误率超过 5%"
+
+      - alert: AgentInterfaceReserved
+        expr: vector(1)
+        for: 0m
+        labels:
+          severity: info
+        annotations:
+          summary: "/api/agent/* 当前仅保留接口，未启用真实 Agent"
