@@ -1,0 +1,76 @@
+version: "3.9"
+
+services:
+  order-service-a:
+    volumes:
+      - ./services:/app/services
+      - ./celery_app:/app/celery_app
+      - ./scripts:/app/scripts
+    command: >
+      uvicorn services.order.main:app
+      --host 0.0.0.0
+      --port 8001
+      --reload
+      --reload-dir /app/services
+      --reload-dir /app/celery_app
+      --reload-delay 0.5
+    environment:
+      WATCHFILES_FORCE_POLLING: "1"
+
+  inventory-service-a:
+    volumes:
+      - ./services:/app/services
+      - ./celery_app:/app/celery_app
+      - ./scripts:/app/scripts
+    command: >
+      uvicorn services.inventory.main:app
+      --host 0.0.0.0
+      --port 8002
+      --reload
+      --reload-dir /app/services
+      --reload-dir /app/celery_app
+      --reload-delay 0.5
+    environment:
+      WATCHFILES_FORCE_POLLING: "1"
+
+  payment-service-a:
+    volumes:
+      - ./services:/app/services
+      - ./celery_app:/app/celery_app
+      - ./scripts:/app/scripts
+    command: >
+      uvicorn services.payment.main:app
+      --host 0.0.0.0
+      --port 8003
+      --reload
+      --reload-dir /app/services
+      --reload-dir /app/celery_app
+      --reload-delay 0.5
+    environment:
+      WATCHFILES_FORCE_POLLING: "1"
+
+  user-service-a:
+    volumes:
+      - ./services:/app/services
+      - ./celery_app:/app/celery_app
+      - ./scripts:/app/scripts
+    command: >
+      uvicorn services.user.main:app
+      --host 0.0.0.0
+      --port 8004
+      --reload
+      --reload-dir /app/services
+      --reload-dir /app/celery_app
+      --reload-delay 0.5
+    environment:
+      WATCHFILES_FORCE_POLLING: "1"
+
+  celery-worker:
+    volumes:
+      - ./services:/app/services
+      - ./celery_app:/app/celery_app
+      - ./scripts:/app/scripts
+    command: >
+      celery -A celery_app.celery_config:app worker
+      --loglevel=info
+      --queues=inventory,payments,maintenance
