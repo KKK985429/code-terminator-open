@@ -1,1 +1,4 @@
 .runtime/
+logs/**
+!logs/
+!logs/.gitkeep
