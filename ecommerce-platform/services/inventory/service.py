@@ -40,7 +40,31 @@ def redis_lock(key: str, timeout: int = 5):
 
 
 def get_inventory(db: Session, product_id: int) -> Inventory:
+    if (
+        BugFlags.missing_row_attribute_error()
+        and product_id == BugFlags.broken_product_id()
+    ):
+        inventory = None
+        return inventory.total_qty  # type: ignore[union-attr,return-value]
     inventory = db.query(Inventory).filter(Inventory.product_id == product_id).first()
+    if inventory is None:
+        raise ValueError(f"Inventory for product {product_id} not found")
+    return inventory
+
+
+def _locked_inventory(db: Session, product_id: int) -> Inventory:
+    if (
+        BugFlags.missing_row_attribute_error()
+        and product_id == BugFlags.broken_product_id()
+    ):
+        inventory = None
+        return inventory.total_qty  # type: ignore[union-attr,return-value]
+    inventory = (
+        db.query(Inventory)
+        .filter(Inventory.product_id == product_id)
+        .with_for_update()
+        .first()
+    )
     if inventory is None:
         raise ValueError(f"Inventory for product {product_id} not found")
     return inventory
@@ -62,14 +86,7 @@ def reserve_inventory(db: Session, order_id: int, items: list[dict]) -> None:
             continue
 
         with redis_lock(f"product:{product_id}"):
-            inventory = (
-                db.query(Inventory)
-                .filter(Inventory.product_id == product_id)
-                .with_for_update()
-                .first()
-            )
-            if inventory is None:
-                raise ValueError(f"Inventory for product {product_id} not found")
+            inventory = _locked_inventory(db, product_id)
             available = inventory.total_qty - inventory.reserved_qty - inventory.sold_qty
             if available < qty:
                 raise InsufficientStockError(product_id, qty, available)
@@ -82,14 +99,7 @@ def confirm_inventory(db: Session, order_id: int, items: list[dict]) -> None:
         product_id = item["product_id"]
         qty = item["quantity"]
         with redis_lock(f"product:{product_id}"):
-            inventory = (
-                db.query(Inventory)
-                .filter(Inventory.product_id == product_id)
-                .with_for_update()
-                .first()
-            )
-            if inventory is None:
-                raise ValueError(f"Inventory for product {product_id} not found")
+            inventory = _locked_inventory(db, product_id)
             inventory.reserved_qty = max(0, inventory.reserved_qty - qty)
             inventory.sold_qty += qty
             db.commit()
@@ -100,13 +110,6 @@ def release_inventory(db: Session, order_id: int, items: list[dict]) -> None:
         product_id = item["product_id"]
         qty = item["quantity"]
         with redis_lock(f"product:{product_id}"):
-            inventory = (
-                db.query(Inventory)
-                .filter(Inventory.product_id == product_id)
-                .with_for_update()
-                .first()
-            )
-            if inventory is None:
-                raise ValueError(f"Inventory for product {product_id} not found")
+            inventory = _locked_inventory(db, product_id)
             inventory.reserved_qty = max(0, inventory.reserved_qty - qty)
             db.commit()
