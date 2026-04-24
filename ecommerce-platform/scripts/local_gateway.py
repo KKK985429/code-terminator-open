@@ -6,15 +6,20 @@ import math
 import os
 import sqlite3
 import time
+import uuid
 from collections import Counter, deque
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
 from typing import Any, Final
 
 import httpx
+import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+
+from services.shared.event_log import body_for_log, write_event, write_exception_event
+from services.shared.logger import configure_logging
 
 
 ORDER_BASE: Final[str] = os.getenv("ORDER_BASE_URL", "http://127.0.0.1:58001")
@@ -34,6 +39,7 @@ SIMULATOR_STATUS_FILE = Path(
 MONITOR_HTML = (
     Path(__file__).resolve().with_name("monitor_dashboard.html").read_text(encoding="utf-8")
 )
+logger = configure_logging("local-gateway")
 
 
 @dataclass(slots=True)
@@ -577,12 +583,14 @@ async def _proxy(request: Request, base_url: str) -> Response:
     upstream = f"{base_url}{request.url.path}"
     if request.url.query:
         upstream = f"{upstream}?{request.url.query}"
+    trace_id = request.headers.get("x-trace-id") or uuid.uuid4().hex
     headers = {
         key: value
         for key, value in request.headers.items()
         if key.lower() not in {"host", "content-length"}
     }
     content = await request.body()
+    headers["x-trace-id"] = trace_id
     assert client is not None
 
     started_at = monitor_state.request_started()
@@ -616,11 +624,37 @@ async def _proxy(request: Request, base_url: str) -> Response:
             simulator_stage=simulator_stage,
             simulator_event=simulator_event,
         )
+        latency_ms = round((time.perf_counter() - started_at) * 1000, 2)
+        level = "info"
+        if response.status_code >= 500:
+            level = "error"
+        elif response.status_code >= 400:
+            level = "warning"
+        event_payload = {
+            "trace_id": trace_id,
+            "source": "gateway",
+            "method": request.method,
+            "path": request.url.path,
+            "query": request.url.query,
+            "status_code": response.status_code,
+            "latency_ms": latency_ms,
+            "upstream": base_url,
+            "request_body": body_for_log(content, request.headers.get("content-type")),
+            "response_body": body_for_log(body_bytes, response.headers.get("content-type")),
+        }
+        getattr(logger, level)("gateway_access", **event_payload)
+        write_event(
+            service="local-gateway",
+            level=level,
+            event="gateway_access",
+            **event_payload,
+        )
         response_headers = {
             key: value
             for key, value in response.headers.items()
             if key.lower() not in {"content-length", "transfer-encoding", "connection"}
         }
+        response_headers["x-trace-id"] = trace_id
         return Response(
             content=body_bytes,
             status_code=response.status_code,
@@ -631,6 +665,28 @@ async def _proxy(request: Request, base_url: str) -> Response:
         body_bytes = json.dumps(
             {"detail": f"Upstream request failed: {exc.__class__.__name__}"}
         ).encode("utf-8")
+        logger.error(
+            "gateway_upstream_failed",
+            trace_id=trace_id,
+            method=request.method,
+            path=request.url.path,
+            upstream=base_url,
+            exc_info=True,
+        )
+        write_exception_event(
+            service="local-gateway",
+            level="error",
+            event="gateway_upstream_failed",
+            exc=exc,
+            trace_id=trace_id,
+            source="gateway",
+            method=request.method,
+            path=request.url.path,
+            query=request.url.query,
+            status_code=502,
+            upstream=base_url,
+            request_body=body_for_log(content, request.headers.get("content-type")),
+        )
         monitor_state.request_finished(
             started_at=started_at,
             path=request.url.path,
@@ -649,6 +705,7 @@ async def _proxy(request: Request, base_url: str) -> Response:
         return Response(
             content=body_bytes,
             status_code=502,
+            headers={"x-trace-id": trace_id},
             media_type="application/json",
         )
 
