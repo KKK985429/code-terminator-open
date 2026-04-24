@@ -29,3 +29,18 @@ def test_bug_index_error_raises_for_user_without_orders(seeded_db, monkeypatch):
 
     with pytest.raises(IndexError):
         get_user_orders(db, ids["second_user_id"])
+
+
+def test_bug_coupon_lookup_key_error_raises_for_unknown_coupon(seeded_db, monkeypatch):
+    db, ids = seeded_db
+    monkeypatch.setenv("BUG_ORDER_COUPON_KEY", "true")
+
+    with pytest.raises(KeyError):
+        create_order(
+            db,
+            OrderCreate(
+                user_id=ids["user_id"],
+                items=[{"product_id": ids["product_id"], "quantity": 1}],
+                coupon_code="FLASH50",
+            ),
+        )

@@ -18,6 +18,11 @@ from services.shared.models import Order, OrderItem, Product, User
 from services.shared.settings import sync_tasks
 from services.user.service import get_vip_discount
 
+COUPON_DISCOUNTS = {
+    "SAVE10": Decimal("10.00"),
+    "SAVE20": Decimal("20.00"),
+}
+
 
 def generate_order_no() -> str:
     return f"ORD-{int(time.time())}-{str(uuid.uuid4())[:8].upper()}"
@@ -25,10 +30,11 @@ def generate_order_no() -> str:
 
 def _coupon_discount(payload: OrderCreate) -> Decimal:
     code = (payload.coupon_code or "").strip().upper()
-    if code == "SAVE10":
-        return Decimal("10.00")
-    if code == "SAVE20":
-        return Decimal("20.00")
+    if BugFlags.coupon_lookup_key_error():
+        # Intentional bug path for repair demos: missing/unknown coupons explode as KeyError.
+        return COUPON_DISCOUNTS[payload.coupon_code]
+    if code in COUPON_DISCOUNTS:
+        return COUPON_DISCOUNTS[code]
     return Decimal("0")
 
 

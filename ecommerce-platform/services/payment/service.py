@@ -24,6 +24,21 @@ def _quantize(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+def _gateway_settlement_amount(*, total: Decimal, coupon_discount: Decimal) -> Decimal:
+    settlement_quote = {
+        "gross_amount": _quantize(total),
+        "coupon_discount": _quantize(coupon_discount),
+        "settlement_amount": _quantize(total - coupon_discount),
+    }
+    if BugFlags.gateway_contract_key_error() and coupon_discount > Decimal("0"):
+        # Intentional bug path for repair demos: gateway payload schema drifts on coupon orders.
+        settlement_quote = {
+            "gross_amount": settlement_quote["gross_amount"],
+            "coupon_discount": settlement_quote["coupon_discount"],
+        }
+    return settlement_quote["settlement_amount"]
+
+
 def calculate_from_discount_rate(
     total: Decimal,
     discount_rate: Decimal,
@@ -46,7 +61,7 @@ def calculate_from_discount_rate(
             "final_amount": Decimal(str(final_amount)),
         }
 
-    after_coupon = total - coupon_discount
+    after_coupon = _gateway_settlement_amount(total=total, coupon_discount=coupon_discount)
     discount_amount = _quantize(after_coupon * discount_rate)
     after_discount = after_coupon - discount_amount
     tax_amount = _quantize(after_discount * TAX_RATE)

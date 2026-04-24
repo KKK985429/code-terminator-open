@@ -18,11 +18,15 @@ def prepare_test_database(tmp_path: Path) -> None:
 def clear_bug_flags() -> None:
     for name in (
         "BUG_INDEX_ERROR",
+        "BUG_ORDER_COUPON_KEY",
         "BUG_RACE_CONDITION",
+        "BUG_INVENTORY_MISSING_ROW",
+        "BUG_INVENTORY_BROKEN_PRODUCT_ID",
         "BUG_FLOAT_PRECISION",
+        "BUG_PAYMENT_GATEWAY_KEY",
         "BUG_NULL_VIP",
     ):
-        os.environ[name] = "false"
+        os.environ[name] = "7" if name == "BUG_INVENTORY_BROKEN_PRODUCT_ID" else "false"
 
 
 def seed_basic_data(db) -> dict[str, int]:
