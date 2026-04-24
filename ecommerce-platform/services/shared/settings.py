@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 
 DEFAULT_DATABASE_URL = "postgresql://ecom:password@postgres:5432/ecommerce"
 DEFAULT_REDIS_URL = "redis://redis:6379/0"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_LOG_FILE = PROJECT_ROOT / "logs" / "ecommerce-debug.jsonl"
 
 
 def env(name: str, default: str = "") -> str:
@@ -31,3 +34,15 @@ def service_name(default: str) -> str:
 
 def sync_tasks() -> bool:
     return bool_env("SYNC_TASKS", False)
+
+
+def project_root() -> Path:
+    return PROJECT_ROOT
+
+
+def log_file() -> Path:
+    raw = env("LOG_FILE", str(DEFAULT_LOG_FILE))
+    path = Path(raw).expanduser()
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    return path

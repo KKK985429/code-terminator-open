@@ -7,12 +7,14 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from services.inventory.routes import router
 from services.shared.database import init_database
 from services.shared.logger import configure_logging
+from services.shared.request_logging import install_request_logging
 from services.shared.settings import service_name
 
 
 logger = configure_logging(service_name("inventory-service"))
 app = FastAPI(title="Inventory Service", version="1.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+install_request_logging(app, service=service_name("inventory-service"))
 Instrumentator().instrument(app).expose(app)
 app.include_router(router, prefix="/api/v1")
 
