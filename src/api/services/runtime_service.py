@@ -51,6 +51,9 @@ class RuntimeService:
     _state_root: Path = field(init=False, repr=False)
     _hook_pump_task: asyncio.Task[Any] | None = field(default=None, init=False, repr=False)
     _ingest_task: asyncio.Task[Any] | None = field(default=None, init=False, repr=False)
+    _deploy_watcher_task: asyncio.Task[Any] | None = field(
+        default=None, init=False, repr=False
+    )
 
     def __post_init__(self) -> None:
         self._state_root = self._resolve_state_root()
@@ -88,6 +91,7 @@ class RuntimeService:
         self._reset_startup_runtime_state()
         self._ensure_hook_pump()
         self._ensure_incident_ingest()
+        self._ensure_deploy_watcher()
 
     async def stop_background_tasks(self) -> None:
         task = self._hook_pump_task
@@ -472,6 +476,21 @@ class RuntimeService:
         self._ingest_task = loop.create_task(
             self._incident_ingest_loop(),
             name="incident-ingest-global",
+        )
+
+    def _ensure_deploy_watcher(self) -> None:
+        existing = getattr(self, "_deploy_watcher_task", None)
+        if existing is not None and not existing.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        from src.app.deploy_watcher import run_deploy_watcher_loop
+
+        self._deploy_watcher_task = loop.create_task(
+            run_deploy_watcher_loop(),
+            name="deploy-watcher-global",
         )
 
     async def _incident_ingest_loop(self) -> None:
