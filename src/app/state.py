@@ -65,6 +65,7 @@ class PlanItem(BaseModel):
     )
     source_event: EventType = "system"
     assignee: AgentRole | Literal["unassigned"] = "unassigned"
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class EventEnvelope(BaseModel):
