@@ -53,7 +53,11 @@ def process_record(record: dict[str, Any]) -> dict[str, Any] | None:
             try:
                 from datetime import datetime, timezone
 
-                deployed_at = datetime.fromisoformat(deployed_at_str).timestamp()
+                deployed_at = (
+                    datetime.fromisoformat(deployed_at_str)
+                    .astimezone(timezone.utc)
+                    .timestamp()
+                )
             except Exception:
                 deployed_at = 0.0
             # 必须在部署后超过宽限期才算复发
