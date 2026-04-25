@@ -69,6 +69,7 @@ def tail_new_records() -> Generator[dict[str, Any], None, None]:
                 if record.get("traceback"):  # 必须有 traceback
                     yield record
             elif event == "service_request" and status_code >= _INGEST_STATUS_THRESHOLD:
-                yield record
+                if record.get("traceback"):  # service_request 也必须有 traceback 才处理
+                    yield record
 
     _save_offset(new_offset)
