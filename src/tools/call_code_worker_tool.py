@@ -476,6 +476,13 @@ class CallCodeWorkerTool:
                 item["report"] = report
                 break
 
+        workflow_updates = report.get("workflow_updates", {})
+        if isinstance(workflow_updates, dict):
+            for key in ("branch_name", "commit_sha", "pr_url", "base_branch"):
+                val = str(workflow_updates.get(key, "")).strip()
+                if val:
+                    workflow[key] = val
+
     @staticmethod
     def _dump(payload: dict[str, Any]) -> str:
         return json.dumps(payload, ensure_ascii=False)
