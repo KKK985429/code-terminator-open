@@ -491,23 +491,47 @@ class RuntimeService:
                     if wakeup is None:
                         continue
                     thread_id = wakeup["thread_id"]
+                    event_type = str(wakeup.get("event_type", ""))
+                    should_resume = event_type != "incident_new"
+                    event_payload = {
+                        "event_id": f"evt-incident-{uuid.uuid4().hex[:6]}",
+                        "event_type": event_type,
+                        "payload": wakeup,
+                    }
                     logger.info(
                         "incident_ingest.wakeup event_type=%s fingerprint=%s",
-                        wakeup["event_type"],
+                        event_type,
                         wakeup["fingerprint"],
                     )
                     try:
                         await run(
                             "__incident__",
                             thread_id=thread_id,
-                            resume=True,
-                            current_event={
-                                "event_id": f"evt-incident-{uuid.uuid4().hex[:6]}",
-                                "event_type": wakeup["event_type"],
-                                "payload": wakeup,
-                            },
+                            resume=should_resume,
+                            current_event=event_payload,
                         )
                     except Exception as exc:
+                        if should_resume and "core_memory" in str(exc):
+                            logger.info(
+                                "incident_ingest.retry_without_resume event_type=%s fingerprint=%s",
+                                event_type,
+                                wakeup["fingerprint"],
+                            )
+                            try:
+                                await run(
+                                    "__incident__",
+                                    thread_id=thread_id,
+                                    resume=False,
+                                    current_event=event_payload,
+                                )
+                                continue
+                            except Exception as retry_exc:
+                                logger.warning(
+                                    "incident_ingest.run_failed fingerprint=%s error=%s",
+                                    wakeup["fingerprint"],
+                                    retry_exc,
+                                )
+                                continue
                         logger.warning(
                             "incident_ingest.run_failed fingerprint=%s error=%s",
                             wakeup["fingerprint"],
