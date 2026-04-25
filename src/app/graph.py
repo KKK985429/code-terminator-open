@@ -65,6 +65,24 @@ def leader_node(state: RuntimeState) -> RuntimeState:
             )
             if error_text:
                 state["errors"].append(error_text)
+        elif current_event.event_type in ("incident_new", "incident_regressed"):
+            payload = current_event.payload
+            incident_message = (
+                f"[INCIDENT {current_event.event_type.upper()}] "
+                f"service={payload.get('service', '?')} "
+                f"exception={payload.get('exception_type', '?')} "
+                f"fingerprint={payload.get('fingerprint', '?')}\n"
+                f"traceback摘要: {str(payload.get('traceback_summary', ''))[:300]}"
+            )
+            plan_items, produced_event = leader.on_user_message(
+                message=incident_message,
+                plan_items=plan_items,
+                conversation_turns=conversation_turns,
+                conversation_summary=state.get("conversation_summary", ""),
+            )
+            conversation_turns.append(
+                ConversationTurn(role="user", content=incident_message)
+            )
         else:
             message = str(current_event.payload.get("message", state["task"]))
             plan_items, produced_event = leader.on_user_message(
