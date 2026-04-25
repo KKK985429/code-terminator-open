@@ -70,6 +70,31 @@ def incident_action(body: dict[str, Any]) -> dict[str, Any]:
     return {"ok": False, "error": f"unknown action: {action}"}
 
 
+@router.post("/review/feedback")
+def review_feedback(body: dict[str, Any]) -> dict[str, Any]:
+    """
+    接收管理员审批反馈。
+    body 格式：
+      { "action": "approve", "incident_id": "2380f29e" }
+      { "action": "reject",  "incident_id": "2380f29e", "reason": "逻辑有问题" }
+      { "action": "suppress","incident_id": "2380f29e" }
+    """
+    from src.app.review_bridge import handle_admin_feedback
+
+    action = str(body.get("action", "")).strip()
+    incident_id = str(body.get("incident_id", "")).strip()
+    reason = str(body.get("reason", "")).strip()
+
+    if not action or not incident_id:
+        return {"ok": False, "error": "action 和 incident_id 都是必填项"}
+
+    return handle_admin_feedback(
+        action=action,
+        incident_id=incident_id,
+        reason=reason,
+    )
+
+
 def _count_by_status(entries: list[dict[str, Any]]) -> dict[str, int]:
     counts: dict[str, int] = {}
     for entry in entries:
