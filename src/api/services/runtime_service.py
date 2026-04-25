@@ -615,6 +615,29 @@ class RuntimeService:
             payload.get("task_id"),
             payload.get("status"),
         )
+        if str(payload.get("status")) == "completed":
+            try:
+                details_raw = payload.get("details", "{}")
+                details = json.loads(details_raw) if isinstance(details_raw, str) else {}
+                workflow_updates = details.get("workflow_updates", {})
+                if thread_id.startswith("incident::"):
+                    fingerprint = thread_id.replace("incident::", "")
+                    from src.app.incident_registry import get as get_incident
+                    from src.app.review_bridge import send_review_notification
+
+                    entry = get_incident(fingerprint)
+                    if entry and entry.get("status") not in ("resolved", "suppressed"):
+                        send_review_notification(
+                            fingerprint=fingerprint,
+                            service=entry.get("service", ""),
+                            exception_type=entry.get("exception_type", ""),
+                            traceback_summary=entry.get("sample_traceback", ""),
+                            branch_name=str(workflow_updates.get("branch_name", "")),
+                            commit_sha=str(workflow_updates.get("commit_sha", "")),
+                            pr_url=str(workflow_updates.get("pr_url", "")),
+                        )
+            except Exception as exc:
+                logger.warning("review_bridge.auto_notify.error error=%s", exc)
         return True
 
     # ------------------------------------------------------------------ #
