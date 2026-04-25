@@ -78,7 +78,7 @@ class WorkerCodexConfig:
     docker_image: str
     container_workspace: str
     codex_bin: str
-    host_node_root: str
+    host_node_root: str | None
     container_host_node_root: str
     model: str
     timeout_seconds: int
@@ -174,10 +174,7 @@ class WorkerCodexConfig:
                 or "/workspace"
             ),
             codex_bin=os.getenv("CODEX_WORKER_CODEX_BIN", "").strip() or "codex",
-            host_node_root=(
-                os.getenv("CODEX_WORKER_HOST_NODE_ROOT", "").strip()
-                or _default_host_node_root()
-            ),
+            host_node_root=os.getenv("CODEX_WORKER_HOST_NODE_ROOT", "").strip() or None,
             container_host_node_root=(
                 os.getenv("CODEX_WORKER_CONTAINER_NODE_ROOT", "/opt/host-node").strip()
                 or "/opt/host-node"
@@ -546,8 +543,8 @@ def execute_leader_assignment(
             "run",
             "--rm",
             "-i",
-            "-v",
-            f"{host_job_dir}:{container_workspace}",
+            "--mount",
+            f"type=bind,source={host_job_dir},target={container_workspace}",
             "-w",
             container_workspace,
         ]

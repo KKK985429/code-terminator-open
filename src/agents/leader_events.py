@@ -164,7 +164,7 @@ LEADER_ACTION_TOOL_SCHEMA: dict[str, Any] = {
             "or execution work is needed. If you are fully ready to reply to the user, "
             "do not call any tool and answer in markdown directly."
         ),
-        "strict": True,
+        "strict": False,
         "parameters": {
             "type": "object",
             "additionalProperties": False,

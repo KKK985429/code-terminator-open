@@ -26,6 +26,9 @@ from src.app.hook_bus import HookEventBus
 from src.app.state import PlanItem
 
 
+DEFAULT_CODE_WORKER_REPO_URL = "https://github.com/KKK985429/code-terminator-open"
+
+
 @dataclass
 class CallCodeWorkerTool:
     name: str = "call_code_worker"
@@ -211,7 +214,9 @@ class CallCodeWorkerTool:
         acceptance_criteria = parsed_details.get("acceptance_criteria", "").strip()
         if not acceptance_criteria:
             acceptance_criteria = details or target_item.content.strip()
-        repo_url = str(workflow.get("repo_url", "")).strip()
+        repo_url = (
+            str(workflow.get("repo_url", "")).strip() or DEFAULT_CODE_WORKER_REPO_URL
+        )
         collaboration_target = str(workflow.get("collaboration_target", "")).strip()
         local_repo_path = ""
 
