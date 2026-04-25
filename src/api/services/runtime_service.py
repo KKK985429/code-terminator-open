@@ -50,6 +50,7 @@ class RuntimeService:
     _plan_snapshots: dict[str, PlanSnapshotResponse] = field(default_factory=dict)
     _state_root: Path = field(init=False, repr=False)
     _hook_pump_task: asyncio.Task[Any] | None = field(default=None, init=False, repr=False)
+    _ingest_task: asyncio.Task[Any] | None = field(default=None, init=False, repr=False)
 
     def __post_init__(self) -> None:
         self._state_root = self._resolve_state_root()
@@ -86,6 +87,7 @@ class RuntimeService:
     async def start_background_tasks(self) -> None:
         self._reset_startup_runtime_state()
         self._ensure_hook_pump()
+        self._ensure_incident_ingest()
 
     async def stop_background_tasks(self) -> None:
         task = self._hook_pump_task
@@ -457,6 +459,64 @@ class RuntimeService:
             self._hook_pump_loop(),
             name="hook-pump-global",
         )
+
+    def _ensure_incident_ingest(self) -> None:
+        # 和 _ensure_hook_pump 完全相同的启动模式
+        existing = getattr(self, "_ingest_task", None)
+        if existing is not None and not existing.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._ingest_task = loop.create_task(
+            self._incident_ingest_loop(),
+            name="incident-ingest-global",
+        )
+
+    async def _incident_ingest_loop(self) -> None:
+        from src.app.incident_wakeup import process_record
+        from src.app.incidents import tail_new_records
+
+        enabled = os.getenv("CODE_TERMINATOR_AGENT_ENABLE_INGEST", "1") == "1"
+        if not enabled:
+            logger.info("incident_ingest: disabled by env")
+            return
+
+        logger.info("incident_ingest: loop started")
+        while True:
+            try:
+                for record in tail_new_records():
+                    wakeup = process_record(record)
+                    if wakeup is None:
+                        continue
+                    thread_id = wakeup["thread_id"]
+                    logger.info(
+                        "incident_ingest.wakeup event_type=%s fingerprint=%s",
+                        wakeup["event_type"],
+                        wakeup["fingerprint"],
+                    )
+                    try:
+                        await run(
+                            "__incident__",
+                            thread_id=thread_id,
+                            resume=True,
+                            current_event={
+                                "event_id": f"evt-incident-{uuid.uuid4().hex[:6]}",
+                                "event_type": wakeup["event_type"],
+                                "payload": wakeup,
+                            },
+                        )
+                    except Exception as exc:
+                        logger.warning(
+                            "incident_ingest.run_failed fingerprint=%s error=%s",
+                            wakeup["fingerprint"],
+                            exc,
+                        )
+            except Exception as exc:
+                logger.warning("incident_ingest.loop_error error=%s", exc)
+
+            await asyncio.sleep(5.0)  # 每 5 秒扫一次日志
 
     async def _hook_pump_loop(self) -> None:
         while True:
