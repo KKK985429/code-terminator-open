@@ -142,7 +142,7 @@ npm run dev
 
 ## Real Docker Worker
 
-如果你希望 `leader` 真正把任务发给 Docker 中的 Codex Worker，建议先准备一个稳定的 Worker 镜像：
+如果你希望 `leader` 真正把任务发给 Docker 中的 CLI Worker，建议先准备一个稳定的 Worker 镜像：
 
 ```bash
 docker build -t code-terminator/worker-codex -f docker/worker-codex/Dockerfile .
@@ -162,6 +162,58 @@ Worker 执行时会：
 2. 写入 `leader-task.md` 和 `leader-task.json`
 3. 启动 Docker 容器
 4. 把结果、stdout、stderr、内部日志都落盘
+
+### Kimi Local Integration Case
+
+仓库现在附带一个真实的本地集成用例，专门验证：
+
+- `call_code_worker` 真实异步链路
+- Docker 内启动 Kimi
+- 在隔离工作区写本地文件
+- hook 回传 `structured_output`
+- 全程不触发 GitHub 或远端仓库操作
+
+样例配置文件：
+
+```bash
+configs/kimi-local-integration.env.example
+```
+
+手动运行：
+
+```bash
+set -a
+source configs/kimi-local-integration.env.example
+export OPENAI_BASE_URL="https://your-openai-compatible-endpoint"
+export OPENAI_API_KEY="your-api-key"
+set +a
+
+uv run --python python3.12 python scripts/run_kimi_local_integration.py
+```
+
+如果你要把它作为真实 pytest 用例运行，需要显式打开：
+
+```bash
+RUN_KIMI_LOCAL_INTEGRATION=1 \
+OPENAI_BASE_URL="https://your-openai-compatible-endpoint" \
+OPENAI_API_KEY="your-api-key" \
+uv run --python python3.12 pytest -q tests/test_kimi_local_integration.py
+```
+
+详细说明见：
+
+```text
+docs/kimi-local-integration.md
+```
+
+辅助文件：
+
+```text
+docs/kimi-local-integration-checklist.md
+docs/kimi-local-integration-troubleshooting.md
+scripts/run_kimi_local_integration.sh
+configs/kimi-local-integration.dashscope.env.example
+```
 
 ## Configuration
 
@@ -221,6 +273,13 @@ Worker 执行时会：
 | `CODEX_WORKER_HOST_NODE_ROOT` | 自动探测 | 挂载宿主机 Node/Codex 根目录 |
 | `CODEX_WORKER_CONTAINER_NODE_ROOT` | `/opt/host-node` | 容器内挂载 Node 根目录 |
 | `CODEX_WORKER_DOCKER_ARGS` | 空 | 额外透传给 `docker run` 的参数 |
+
+Kimi 兼容别名：
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `KIMI_WORKER_DOCKER_IMAGE` | 空 | 优先于 `CODEX_WORKER_DOCKER_IMAGE` |
+| `KIMI_WORKER_BIN` | `kimi` | 优先于 `CODEX_WORKER_CODEX_BIN` |
 
 代理与网络相关的高级项：
 

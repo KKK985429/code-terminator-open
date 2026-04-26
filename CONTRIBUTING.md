@@ -185,6 +185,28 @@ uv run pytest
 uv run pytest tests/test_leader_event_runtime.py tests/test_leader_query_set.py
 ```
 
+- 若改动涉及真实 Docker Worker / Kimi 集成链路，优先补充并执行本地集成验证：
+
+```bash
+uv run --python python3.12 python scripts/run_kimi_local_integration.py
+```
+
+- 若需要把真实 Kimi 集成用例纳入 pytest，请显式打开：
+
+```bash
+RUN_KIMI_LOCAL_INTEGRATION=1 \
+OPENAI_BASE_URL="https://your-openai-compatible-endpoint" \
+OPENAI_API_KEY="your-api-key" \
+uv run --python python3.12 pytest -q tests/test_kimi_local_integration.py
+```
+
+- 提交前建议同步检查：
+
+```text
+docs/kimi-local-integration-checklist.md
+docs/kimi-local-integration-troubleshooting.md
+```
+
 - 涉及 Web 或联调改动时，至少确认开发环境可以正常启动：
 
 ```bash

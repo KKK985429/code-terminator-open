@@ -25,7 +25,7 @@ from src.skills.registry import SkillRegistry
 from src.tools.registry import ToolRegistry
 
 logger = get_logger(__name__)
-_DEFAULT_WORKER_DOCKER_IMAGE = "mcr.microsoft.com/playwright:v1.58.2-noble"
+_DEFAULT_WORKER_DOCKER_IMAGE = "kimi-cliagent-benchmark:latest"
 _PROXY_WRAPPER_NAME = "with-proxy"
 WORKER_RESULT_JSON_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -65,7 +65,7 @@ WORKER_RESULT_JSON_SCHEMA: dict[str, Any] = {
 
 
 class WorkerExecutionError(RuntimeError):
-    """Raised when the docker-backed Codex worker cannot be launched."""
+    """Raised when the docker-backed worker cannot be launched."""
 
 
 @dataclass(frozen=True)
@@ -161,14 +161,19 @@ class WorkerCodexConfig:
         )
         return cls(
             docker_image=(
-                os.getenv("CODEX_WORKER_DOCKER_IMAGE", "").strip()
+                os.getenv("KIMI_WORKER_DOCKER_IMAGE", "").strip()
+                or os.getenv("CODEX_WORKER_DOCKER_IMAGE", "").strip()
                 or _default_worker_docker_image()
             ),
             container_workspace=(
                 os.getenv("CODEX_WORKER_CONTAINER_WORKDIR", "/workspace").strip()
                 or "/workspace"
             ),
-            codex_bin=os.getenv("CODEX_WORKER_CODEX_BIN", "").strip() or "codex",
+            codex_bin=(
+                os.getenv("KIMI_WORKER_BIN", "").strip()
+                or os.getenv("CODEX_WORKER_CODEX_BIN", "").strip()
+                or "kimi"
+            ),
             host_node_root=(
                 os.getenv("CODEX_WORKER_HOST_NODE_ROOT", "").strip()
                 or _default_host_node_root()
@@ -403,7 +408,7 @@ def _build_leader_prompt(
     if proxy_wrapper_relpath:
         prompt_lines.extend(
             [
-                "Codex itself is running with proxy disabled.",
+        "The CLI agent process is running with proxy disabled.",
                 f"For networked shell tools other than git, run them through ./{proxy_wrapper_relpath} <command> ...",
                 "Examples: ./with-proxy gh auth status, ./with-proxy gh repo create, ./with-proxy gh issue create, ./with-proxy gh pr create, ./with-proxy gh pr review, ./with-proxy curl ...",
                 "Git already receives proxy settings via GIT_CONFIG_* and does not need the wrapper.",
@@ -545,22 +550,12 @@ def execute_leader_assignment(
             f"{host_job_dir}:{container_workspace}",
             "-w",
             container_workspace,
+            "--entrypoint",
+            "bash",
         ]
-        codex_home = Path.home() / ".codex"
-        if codex_home.exists():
-            command.extend(["-v", f"{codex_home}:/root/.codex"])
-        if config.host_node_root:
-            host_node_root = Path(config.host_node_root).expanduser().resolve()
-            if not host_node_root.exists():
-                raise WorkerExecutionError(
-                    f"CODEX_WORKER_HOST_NODE_ROOT does not exist: {host_node_root}"
-                )
-            command.extend(
-                [
-                    "-v",
-                    f"{host_node_root}:{config.container_host_node_root}:ro",
-                ]
-            )
+        host_kimi_home = Path.home() / ".kimi"
+        if host_kimi_home.exists():
+            command.extend(["-v", f"{host_kimi_home}:/host-kimi:ro"])
         passthrough_env_values = _resolve_passthrough_env_values(config.passthrough_env)
         for env_name in config.passthrough_env:
             if passthrough_env_values.get(env_name):
@@ -572,49 +567,23 @@ def execute_leader_assignment(
             command.extend(["--add-host", "host.docker.internal:host-gateway"])
         for key, value in git_env.items():
             command.extend(["-e", f"{key}={value}"])
-        command.extend(config.docker_args)
-        codex_bin = config.codex_bin
-        if codex_bin == "codex" and config.host_node_root:
-            codex_bin = f"{config.container_host_node_root.rstrip('/')}/bin/codex"
-        codex_command = [
-            "/usr/bin/env",
-            "-u",
-            "HTTP_PROXY",
-            "-u",
-            "http_proxy",
-            "-u",
-            "HTTPS_PROXY",
-            "-u",
-            "https_proxy",
-            "-u",
-            "ALL_PROXY",
-            "-u",
-            "all_proxy",
-            "-u",
-            "NO_PROXY",
-            "-u",
-            "no_proxy",
-            codex_bin,
-            "exec",
-            "--dangerously-bypass-approvals-and-sandbox",
-            "--skip-git-repo-check",
-            "--color",
-            "never",
-            "-C",
-            container_workspace,
-            "-o",
-            container_output_path,
-        ]
         if config.model:
-            codex_command.extend(["-m", config.model])
-        codex_command.append("-")
+            command.extend(["-e", f"KIMI_WORKER_MODEL={config.model}"])
+        command.extend(config.docker_args)
+        quoted_kimi_bin = shlex.quote(config.codex_bin)
+        kimi_model_snippet = ""
+        if config.model:
+            kimi_model_snippet = ' --model "$KIMI_WORKER_MODEL"'
         codex_capture_script = "\n".join(
             [
                 "set -uo pipefail",
-                f'LOG_SOURCE="/root/.codex/log/codex-tui.log"',
+                f'LOG_SOURCE="${{KIMI_SHARE_DIR:-/tmp/kimi-home/.kimi}}/logs/kimi.log"',
                 f'CODEX_STDOUT_LOG={shlex.quote(container_codex_stdout_path)}',
                 f'CODEX_STDERR_LOG={shlex.quote(container_codex_stderr_path)}',
                 f'CODEX_INTERNAL_LOG={shlex.quote(container_codex_internal_path)}',
+                f'PROMPT_FILE={shlex.quote((Path(container_workspace) / ".worker-prompt.txt").as_posix())}',
+                f'KIMI_HOME={shlex.quote((Path(container_workspace) / ".kimi-home").as_posix())}',
+                f'RESULT_FILE={shlex.quote(container_output_path)}',
                 'before_bytes=0',
                 'if [ -f "$LOG_SOURCE" ]; then',
                 '  before_bytes=$(wc -c < "$LOG_SOURCE" 2>/dev/null || echo 0)',
@@ -622,8 +591,38 @@ def execute_leader_assignment(
                 ': > "$CODEX_STDOUT_LOG"',
                 ': > "$CODEX_STDERR_LOG"',
                 ': > "$CODEX_INTERNAL_LOG"',
-                f'{shlex.join(codex_command)} >"$CODEX_STDOUT_LOG" 2>"$CODEX_STDERR_LOG"',
+                'cat > "$PROMPT_FILE"',
+                'export HOME="$KIMI_HOME"',
+                'export KIMI_SHARE_DIR="$HOME/.kimi"',
+                'mkdir -p "$KIMI_SHARE_DIR" "$KIMI_SHARE_DIR/logs" "$HOME"',
+                'if [ -f /host-kimi/config.toml ]; then cp /host-kimi/config.toml "$KIMI_SHARE_DIR/config.toml"; fi',
+                'if [ ! -f "$KIMI_SHARE_DIR/config.toml" ]; then',
+                '  echo "Missing Kimi config at /host-kimi/config.toml and no container config available." >"$CODEX_STDERR_LOG"',
+                '  exit 2',
+                'fi',
+                'export GITHUB_TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"',
+                'if [ -n "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ]; then',
+                '  TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"',
+                '  mkdir -p /root/.config/git',
+                "  cat > /root/.config/git/askpass.sh <<'EOF'",
+                '#!/usr/bin/env bash',
+                'case "$1" in',
+                '  *Username*) echo "x-access-token" ;;',
+                '  *Password*) echo "${GH_TOKEN:-${GITHUB_TOKEN:-}}" ;;',
+                '  *) echo "" ;;',
+                'esac',
+                'EOF',
+                '  chmod +x /root/.config/git/askpass.sh',
+                '  export GIT_ASKPASS=/root/.config/git/askpass.sh',
+                '  export GIT_TERMINAL_PROMPT=0',
+                '  git config --global credential.helper "!f() { echo username=x-access-token; echo password=$TOKEN; }; f"',
+                'fi',
+                'if [ -n "${OPENAI_BASE_URL:-}" ]; then export OPENAI_BASE_URL; fi',
+                'if [ -n "${OPENAI_API_KEY:-}" ]; then export OPENAI_API_KEY; fi',
+                'KIMI_PROMPT="$(cat "$PROMPT_FILE")"',
+                f'{quoted_kimi_bin} --print --final-message-only -c "$KIMI_PROMPT"{kimi_model_snippet} >"$CODEX_STDOUT_LOG" 2>"$CODEX_STDERR_LOG"',
                 'status=$?',
+                'cp "$CODEX_STDOUT_LOG" "$RESULT_FILE" 2>/dev/null || true',
                 'if [ -f "$LOG_SOURCE" ]; then',
                 '  if [ "$before_bytes" -gt 0 ]; then',
                 '    tail -c "+$((before_bytes + 1))" "$LOG_SOURCE" >"$CODEX_INTERNAL_LOG" 2>/dev/null || cp "$LOG_SOURCE" "$CODEX_INTERNAL_LOG"',
@@ -637,7 +636,6 @@ def execute_leader_assignment(
         command.extend(
             [
                 config.docker_image,
-                "bash",
                 "-lc",
                 codex_capture_script,
             ]
@@ -779,7 +777,7 @@ def execute_leader_assignment(
             {
                 "status": "failed",
                 "summary": (
-                    "Worker execution timed out while waiting for Codex in Docker."
+                    "Worker execution timed out while waiting for Kimi in Docker."
                 ),
                 "error": f"timeout_after_seconds={exc.timeout}",
                 "stdout_tail": _truncate_text(exc.stdout or "", limit=6000),
@@ -806,10 +804,11 @@ def execute_leader_assignment(
 
 
 def _parse_worker_json_output(text: str) -> dict[str, Any]:
-    if not text.strip():
+    payload = _extract_json_payload(text)
+    if not payload:
         return {}
     try:
-        parsed = json.loads(text)
+        parsed = json.loads(payload)
     except json.JSONDecodeError:
         return {}
     if not isinstance(parsed, dict):
@@ -823,6 +822,17 @@ def _parse_worker_json_output(text: str) -> dict[str, Any]:
             parsed.get("workflow_updates")
         ),
     }
+
+
+def _extract_json_payload(text: str) -> str:
+    stripped = text.strip()
+    if not stripped:
+        return ""
+    if stripped.startswith("```"):
+        lines = stripped.splitlines()
+        if len(lines) >= 3 and lines[-1].strip() == "```":
+            return "\n".join(lines[1:-1]).strip()
+    return stripped
 
 
 def _string_list(value: Any) -> list[str]:
