@@ -105,14 +105,37 @@ def _build_payload(
     count: int,
 ) -> dict[str, Any]:
     traceback_text = str(record.get("traceback", ""))
+    # 字段别名兜底:不同 service 的日志可能用不同字段名
+    request_path = (
+        str(record.get("path", ""))
+        or str(record.get("request_path", ""))
+        or str(record.get("url", ""))
+    )
+    request_method = (
+        str(record.get("method", ""))
+        or str(record.get("http_method", ""))
+    )
+    error_message = (
+        str(record.get("error_message", ""))
+        or str(record.get("message", ""))
+    )
     return {
         "event_type": event_type,
         "fingerprint": fingerprint,
         "thread_id": f"incident::{fingerprint}",
         "service": record.get("service", ""),
         "exception_type": record.get("exception_type", ""),
+        # 完整 traceback,供 worker 修复;摘要保留兼容旧消费方
+        "traceback": traceback_text,
         "traceback_summary": traceback_text[:400],
         "trace_id": record.get("trace_id", ""),
+        "path": request_path,
+        "method": request_method,
+        "status_code": record.get("status_code") or record.get("http_status"),
+        "error_message": error_message,
         "occurrence_count": count,
         "incident_entry": entry or {},
+        "wake_reason": event_type,
+        # 完整原始日志,留给 worker 做更细诊断
+        "sample_record": record,
     }
