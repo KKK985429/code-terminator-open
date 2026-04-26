@@ -112,6 +112,9 @@ class CallCodeWorkerTool:
             workflow["code_worker_calls"] = queue
 
         accepted_at = datetime.now(UTC).isoformat(timespec="seconds")
+        incident_ctx = assignment.get("incident_context")
+        if not isinstance(incident_ctx, dict):
+            incident_ctx = {}
         bundle = self._write_leader_assignment_bundle(
             job_directory=job_directory,
             task_id=task_id,
@@ -122,6 +125,9 @@ class CallCodeWorkerTool:
             local_repo_path=local_repo_path,
             work_content=work_content,
             acceptance_criteria=acceptance_criteria,
+            incident_context={
+                k: str(v).strip() for k, v in incident_ctx.items() if str(v).strip()
+            },
         )
         queue.append(
             {
@@ -198,7 +204,7 @@ class CallCodeWorkerTool:
         task_id: str,
         thread_id: str,
         subworker_id: str,
-    ) -> dict[str, str]:
+    ) -> dict[str, Any]:
         details = target_item.details.strip()
         parsed_details = self._parse_detail_payload(details)
         job_root = self._resolve_job_root(workflow=workflow)
@@ -220,6 +226,33 @@ class CallCodeWorkerTool:
         collaboration_target = str(workflow.get("collaboration_target", "")).strip()
         local_repo_path = ""
 
+        # 优先级:metadata > parsed_details JSON > 空
+        # graph.py 的 incident 分支会把 incident 上下文填进 metadata
+        meta = target_item.metadata if isinstance(target_item.metadata, dict) else {}
+
+        def _pick(key: str) -> str:
+            return (
+                str(meta.get(key, "")).strip()
+                or str(parsed_details.get(key, "")).strip()
+            )
+
+        incident_context = {
+            "fingerprint": _pick("incident_fingerprint"),
+            "service": _pick("incident_service"),
+            "exception_type": _pick("incident_exception_type"),
+            "traceback": _pick("incident_traceback"),
+            "trace_id": _pick("incident_trace_id"),
+            "request_path": _pick("incident_request_path"),
+            "request_method": _pick("incident_request_method"),
+            "error_message": _pick("incident_error_message"),
+            "status": _pick("incident_status"),
+            "wake_reason": _pick("wake_reason"),
+            "occurrence_count": _pick("occurrence_count"),
+            "regression_count": _pick("regression_count"),
+        }
+        # 从 runtime settings 读 GitHub token(队友图3 明确要求)
+        github_token = CallCodeWorkerTool._load_github_token()
+
         return {
             "error": "",
             "message": "",
@@ -229,7 +262,30 @@ class CallCodeWorkerTool:
             "local_repo_path": local_repo_path,
             "work_content": work_content,
             "acceptance_criteria": acceptance_criteria,
+            "incident_context": incident_context,
+            "github_token": github_token,
         }
+
+    @staticmethod
+    def _load_github_token() -> str:
+        """从 runtime settings 读取 github_token,失败则回退环境变量。"""
+        try:
+            from src.runtime_settings import load_runtime_settings  # type: ignore[import-not-found]
+
+            settings = load_runtime_settings()
+            token = ""
+            if isinstance(settings, dict):
+                token = str(settings.get("github_token", "")).strip()
+            elif hasattr(settings, "github_token"):
+                token = str(getattr(settings, "github_token", "")).strip()
+            if token:
+                return token
+        except Exception:
+            pass
+        return (
+            os.getenv("GITHUB_TOKEN", "").strip()
+            or os.getenv("GH_TOKEN", "").strip()
+        )
 
     @staticmethod
     def _resolve_job_root(*, workflow: dict[str, Any]) -> Path:
@@ -254,7 +310,22 @@ class CallCodeWorkerTool:
             return {}
         if not isinstance(parsed, dict):
             return {}
-        allowed = {"work_content", "acceptance_criteria"}
+        allowed = {
+            "work_content",
+            "acceptance_criteria",
+            "incident_fingerprint",
+            "incident_service",
+            "incident_exception_type",
+            "incident_traceback",
+            "incident_trace_id",
+            "incident_request_path",
+            "incident_request_method",
+            "incident_error_message",
+            "incident_status",
+            "wake_reason",
+            "occurrence_count",
+            "regression_count",
+        }
         return {
             key: str(value).strip()
             for key, value in parsed.items()
@@ -288,11 +359,13 @@ class CallCodeWorkerTool:
         local_repo_path: str,
         work_content: str,
         acceptance_criteria: str,
+        incident_context: dict[str, str] | None = None,
     ) -> dict[str, str]:
         job_dir = Path(job_directory).expanduser().resolve()
         job_dir.mkdir(parents=True, exist_ok=True)
         markdown_path = job_dir / "leader-task.md"
         json_path = job_dir / "leader-task.json"
+        ic = incident_context or {}
         payload = {
             "task_id": task_id,
             "subworker_id": subworker_id,
@@ -303,25 +376,31 @@ class CallCodeWorkerTool:
             "job_directory": str(job_dir),
             "work_content": work_content,
             "acceptance_criteria": acceptance_criteria,
+            "incident_context": ic,
             "created_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "source": self.name,
         }
-        markdown = "\n".join(
+        md_parts = [
+            "# Leader Assignment",
+            "",
+            f"- task_id: {task_id}",
+            f"- subworker_id: {subworker_id}",
+            f"- thread_id: {thread_id or '(empty)'}",
+            f"- explicit repo_url: {repo_url or '(missing)'}",
+            f"- explicit collaboration_target: {collaboration_target or '(missing)'}",
+            f"- job_directory: {job_dir}",
+            "",
+            "## Leader Command",
+            work_content,
+            "",
+            "## Acceptance Criteria",
+            acceptance_criteria,
+        ]
+        if any(str(v).strip() for v in ic.values()):
+            ic_lines = [f"- {k}: {v}" for k, v in ic.items() if str(v).strip()]
+            md_parts.extend(["", "## Incident Context", *ic_lines])
+        md_parts.extend(
             [
-                "# Leader Assignment",
-                "",
-                f"- task_id: {task_id}",
-                f"- subworker_id: {subworker_id}",
-                f"- thread_id: {thread_id or '(empty)'}",
-                f"- explicit repo_url: {repo_url or '(missing)'}",
-                f"- explicit collaboration_target: {collaboration_target or '(missing)'}",
-                f"- job_directory: {job_dir}",
-                "",
-                "## Leader Command",
-                work_content,
-                "",
-                "## Acceptance Criteria",
-                acceptance_criteria,
                 "",
                 "## Execution Rules",
                 "- Read this file and the JSON companion first.",
@@ -333,6 +412,7 @@ class CallCodeWorkerTool:
                 "- Return a concise summary with changed files, verification, and workflow_updates when you discover or create a stable collaboration address.",
             ]
         )
+        markdown = "\n".join(md_parts)
         markdown_path.write_text(markdown, encoding="utf-8")
         json_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2),
