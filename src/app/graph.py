@@ -67,21 +67,121 @@ def leader_node(state: RuntimeState) -> RuntimeState:
                 state["errors"].append(error_text)
         elif current_event.event_type in ("incident_new", "incident_regressed"):
             payload = current_event.payload
-            incident_message = (
-                f"[INCIDENT {current_event.event_type.upper()}] "
-                f"service={payload.get('service', '?')} "
-                f"exception={payload.get('exception_type', '?')} "
-                f"fingerprint={payload.get('fingerprint', '?')}\n"
-                f"traceback摘要: {str(payload.get('traceback_summary', ''))[:300]}"
+            fingerprint = str(payload.get("fingerprint", "")).strip()
+            service = str(payload.get("service", "?"))
+            exception_type = str(payload.get("exception_type", "?"))
+            full_traceback = str(payload.get("traceback", "")) or str(
+                payload.get("traceback_summary", "")
             )
+            trace_id = str(payload.get("trace_id", ""))
+            request_path = str(payload.get("path", ""))
+            request_method = str(payload.get("method", ""))
+            error_message = str(payload.get("error_message", ""))
+            occurrence_count = int(payload.get("occurrence_count", 0) or 0)
+            sample_record = (
+                payload.get("sample_record", {})
+                if isinstance(payload.get("sample_record"), dict)
+                else {}
+            )
+            incident_status = (
+                "regressed"
+                if current_event.event_type == "incident_regressed"
+                else "new"
+            )
+            incident_metadata: dict[str, Any] = {
+                "incident_fingerprint": fingerprint,
+                "incident_service": service,
+                "incident_exception_type": exception_type,
+                "incident_traceback": full_traceback,
+                "incident_trace_id": trace_id,
+                "incident_request_path": request_path,
+                "incident_request_method": request_method,
+                "incident_error_message": error_message,
+                "incident_status": incident_status,
+                "wake_reason": current_event.event_type,
+                "occurrence_count": occurrence_count,
+                "sample_record": sample_record,
+            }
+
+            # 同 fingerprint 的 PlanItem 已存在 → 复发,更新而非新建
+            existing = (
+                next(
+                    (
+                        p
+                        for p in plan_items
+                        if p.metadata.get("incident_fingerprint") == fingerprint
+                    ),
+                    None,
+                )
+                if fingerprint
+                else None
+            )
+
+            if existing is None:
+                incident_task_id = f"incident-{(fingerprint or 'unknown')[:12]}"
+                details_text = "\n".join(
+                    [
+                        f"# Incident {incident_status.upper()}",
+                        f"- service: {service}",
+                        f"- exception_type: {exception_type}",
+                        f"- fingerprint: {fingerprint or '(unknown)'}",
+                        f"- trace_id: {trace_id or '(none)'}",
+                        f"- request: {request_method} {request_path}".strip(),
+                        f"- occurrence_count: {occurrence_count}",
+                        "",
+                        "## Error Message",
+                        error_message or "(none)",
+                        "",
+                        "## Full Traceback",
+                        full_traceback or "(missing)",
+                        "",
+                        "## Goal",
+                        f"修复 {service} 中导致 {exception_type} 的代码缺陷,"
+                        f"使相同请求 (path={request_path or 'N/A'}) "
+                        f"不再触发该异常,并通过回归验证。",
+                    ]
+                )
+                plan_items.append(
+                    PlanItem(
+                        task_id=incident_task_id,
+                        content=f"修复 {service} 抛出的 {exception_type}",
+                        status="pending",
+                        details=details_text,
+                        source_event=current_event.event_type,
+                        assignee="worker",
+                        metadata=incident_metadata,
+                    )
+                )
+                leader_hint = (
+                    f"系统已建立 incident 计划项 task_id={incident_task_id} "
+                    f"(service={service} exception={exception_type} "
+                    f"status={incident_status})。"
+                    f"完整 traceback、请求路径、原始日志已写入该计划项的 "
+                    f"details 与 metadata。请基于该 task_id 调用 "
+                    f"call_code_worker 派单。"
+                )
+            else:
+                existing.metadata.update(incident_metadata)
+                regression_count = (
+                    int(existing.metadata.get("regression_count", 0) or 0) + 1
+                )
+                existing.metadata["regression_count"] = regression_count
+                if existing.status in ("completed", "failed"):
+                    existing.status = "pending"
+                leader_hint = (
+                    f"复发提醒: incident task_id={existing.task_id} 再次触发 "
+                    f"(regression_count={regression_count})。最新 traceback "
+                    f"与日志已更新到 metadata。请重新评估是否需要再次派单。"
+                )
+
             plan_items, produced_event = leader.on_user_message(
-                message=incident_message,
+                message=leader_hint,
                 plan_items=plan_items,
                 conversation_turns=conversation_turns,
                 conversation_summary=state.get("conversation_summary", ""),
             )
             conversation_turns.append(
-                ConversationTurn(role="user", content=incident_message)
+                ConversationTurn(role="user", content=leader_hint)
             )
         else:
             message = str(current_event.payload.get("message", state["task"]))
