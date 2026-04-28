@@ -29,7 +29,11 @@ The script then validates:
 ## Files
 
 - `scripts/run_kimi_local_integration.py`
+- `scripts/run_kimi_local_suite.py`
+- `scripts/run_kimi_worker_contract_local.py`
+- `scripts/kimi_local_suite_lib.py`
 - `tests/test_kimi_local_integration.py`
+- `tests/test_kimi_local_suite_lib.py`
 - `configs/kimi-local-integration.env.example`
 
 ## Required Environment
@@ -74,6 +78,7 @@ Key variables:
 | `OPENAI_API_KEY` | no | empty | Kimi provider API key |
 | `KIMI_WORKER_DOCKER_IMAGE` | no | `kimi-cliagent-benchmark:latest` | Worker image |
 | `CODEX_WORKER_MODEL` | no | `qwen3.5-plus` | Model passed to Kimi |
+| `KIMI_LOCAL_OUTPUT_ROOT` | no | `.code-terminator/kimi-local` | Local suite summary output root |
 | `RUN_KIMI_LOCAL_INTEGRATION` | no | empty | Enables the real pytest entrypoint |
 
 ## Manual Run
@@ -93,6 +98,18 @@ Pin a job root:
 ```bash
 uv run --python python3.12 python scripts/run_kimi_local_integration.py \
   --job-root /tmp/kimi-local-integration-debug
+```
+
+Run the local suite summary:
+
+```bash
+uv run --python python3.12 python scripts/run_kimi_local_suite.py
+```
+
+Run the worker-contract local check:
+
+```bash
+uv run --python python3.12 python scripts/run_kimi_worker_contract_local.py
 ```
 
 ## Pytest Entry
