@@ -15,3 +15,10 @@ docker images | grep kimi-cliagent-benchmark
 test -f ~/.kimi/config.toml && echo KIMI_CONFIG=OK || echo KIMI_CONFIG=MISSING
 uv run --python python3.12 python scripts/run_kimi_local_integration.py
 ```
+
+Optional follow-up checks:
+
+```bash
+uv run --python python3.12 python scripts/run_kimi_local_suite.py
+uv run --python python3.12 python scripts/run_kimi_worker_contract_local.py
+```
