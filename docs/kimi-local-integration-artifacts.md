@@ -16,3 +16,12 @@ Expected files:
 - `artifacts/local-case/summary.json`
 
 The script also prints the resolved job directory in its JSON output so the artifacts can be inspected after a run with `--keep-artifacts`.
+
+Additional suite outputs are written under the local output root:
+
+- `kimi_local_suite.summary.json`
+- `kimi_local_suite.summary.md`
+- `kimi_local_suite.summary.txt`
+- `kimi_worker_contract_local.summary.json`
+- `kimi_worker_contract_local.summary.md`
+- `kimi_worker_contract_local.summary.txt`
