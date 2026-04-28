@@ -3,12 +3,13 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 DEFAULT_OUTPUT_ROOT = ".code-terminator/kimi-local"
+UTC = timezone.utc
 
 
 @dataclass
@@ -23,6 +24,9 @@ class SuiteStepResult:
 
 
 def default_output_root(project_root: Path) -> Path:
+    configured = os.getenv("KIMI_LOCAL_OUTPUT_ROOT", "").strip()
+    if configured:
+        return Path(configured).expanduser().resolve()
     return (project_root / DEFAULT_OUTPUT_ROOT).resolve()
 
 
