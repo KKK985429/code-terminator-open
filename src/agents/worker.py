@@ -50,6 +50,11 @@ WORKER_RESULT_JSON_SCHEMA: dict[str, Any] = {
             "properties": {
                 "repo_url": {"type": "string"},
                 "collaboration_target": {"type": "string"},
+                "branch_name": {"type": "string"},
+                "commit_sha": {"type": "string"},
+                "pr_url": {"type": "string"},
+                "base_branch": {"type": "string"},
+                "feishu_message_hint": {"type": "string"},
             },
             "required": [],
         },
@@ -73,7 +78,7 @@ class WorkerCodexConfig:
     docker_image: str
     container_workspace: str
     codex_bin: str
-    host_node_root: str
+    host_node_root: str | None
     container_host_node_root: str
     model: str
     timeout_seconds: int
@@ -546,8 +551,8 @@ def execute_leader_assignment(
             "run",
             "--rm",
             "-i",
-            "-v",
-            f"{host_job_dir}:{container_workspace}",
+            "--mount",
+            f"type=bind,source={host_job_dir},target={container_workspace}",
             "-w",
             container_workspace,
             "--entrypoint",
@@ -853,6 +858,16 @@ def _normalize_worker_workflow_updates(value: Any) -> dict[str, str]:
         normalized["repo_url"] = repo_url
     if collaboration_target:
         normalized["collaboration_target"] = collaboration_target
+    for key in (
+        "branch_name",
+        "commit_sha",
+        "pr_url",
+        "base_branch",
+        "feishu_message_hint",
+    ):
+        val = str(value.get(key, "")).strip()
+        if val:
+            normalized[key] = val
     return normalized
 
 

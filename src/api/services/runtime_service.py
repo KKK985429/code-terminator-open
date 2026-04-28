@@ -50,6 +50,10 @@ class RuntimeService:
     _plan_snapshots: dict[str, PlanSnapshotResponse] = field(default_factory=dict)
     _state_root: Path = field(init=False, repr=False)
     _hook_pump_task: asyncio.Task[Any] | None = field(default=None, init=False, repr=False)
+    _ingest_task: asyncio.Task[Any] | None = field(default=None, init=False, repr=False)
+    _deploy_watcher_task: asyncio.Task[Any] | None = field(
+        default=None, init=False, repr=False
+    )
 
     def __post_init__(self) -> None:
         self._state_root = self._resolve_state_root()
@@ -86,6 +90,8 @@ class RuntimeService:
     async def start_background_tasks(self) -> None:
         self._reset_startup_runtime_state()
         self._ensure_hook_pump()
+        self._ensure_incident_ingest()
+        self._ensure_deploy_watcher()
 
     async def stop_background_tasks(self) -> None:
         task = self._hook_pump_task
@@ -458,6 +464,103 @@ class RuntimeService:
             name="hook-pump-global",
         )
 
+    def _ensure_incident_ingest(self) -> None:
+        # 和 _ensure_hook_pump 完全相同的启动模式
+        existing = getattr(self, "_ingest_task", None)
+        if existing is not None and not existing.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._ingest_task = loop.create_task(
+            self._incident_ingest_loop(),
+            name="incident-ingest-global",
+        )
+
+    def _ensure_deploy_watcher(self) -> None:
+        existing = getattr(self, "_deploy_watcher_task", None)
+        if existing is not None and not existing.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        from src.app.deploy_watcher import run_deploy_watcher_loop
+
+        self._deploy_watcher_task = loop.create_task(
+            run_deploy_watcher_loop(),
+            name="deploy-watcher-global",
+        )
+
+    async def _incident_ingest_loop(self) -> None:
+        from src.app.incident_wakeup import process_record
+        from src.app.incidents import tail_new_records
+
+        enabled = os.getenv("CODE_TERMINATOR_AGENT_ENABLE_INGEST", "1") == "1"
+        if not enabled:
+            logger.info("incident_ingest: disabled by env")
+            return
+
+        logger.info("incident_ingest: loop started")
+        while True:
+            try:
+                for record in tail_new_records():
+                    wakeup = process_record(record)
+                    if wakeup is None:
+                        continue
+                    thread_id = wakeup["thread_id"]
+                    event_type = str(wakeup.get("event_type", ""))
+                    should_resume = event_type != "incident_new"
+                    event_payload = {
+                        "event_id": f"evt-incident-{uuid.uuid4().hex[:6]}",
+                        "event_type": event_type,
+                        "payload": wakeup,
+                    }
+                    logger.info(
+                        "incident_ingest.wakeup event_type=%s fingerprint=%s",
+                        event_type,
+                        wakeup["fingerprint"],
+                    )
+                    try:
+                        await run(
+                            "__incident__",
+                            thread_id=thread_id,
+                            resume=should_resume,
+                            current_event=event_payload,
+                        )
+                    except Exception as exc:
+                        if should_resume and "core_memory" in str(exc):
+                            logger.info(
+                                "incident_ingest.retry_without_resume event_type=%s fingerprint=%s",
+                                event_type,
+                                wakeup["fingerprint"],
+                            )
+                            try:
+                                await run(
+                                    "__incident__",
+                                    thread_id=thread_id,
+                                    resume=False,
+                                    current_event=event_payload,
+                                )
+                                continue
+                            except Exception as retry_exc:
+                                logger.warning(
+                                    "incident_ingest.run_failed fingerprint=%s error=%s",
+                                    wakeup["fingerprint"],
+                                    retry_exc,
+                                )
+                                continue
+                        logger.warning(
+                            "incident_ingest.run_failed fingerprint=%s error=%s",
+                            wakeup["fingerprint"],
+                            exc,
+                        )
+            except Exception as exc:
+                logger.warning("incident_ingest.loop_error error=%s", exc)
+
+            await asyncio.sleep(5.0)  # 每 5 秒扫一次日志
+
     async def _hook_pump_loop(self) -> None:
         while True:
             delivered_any = False
@@ -531,6 +634,29 @@ class RuntimeService:
             payload.get("task_id"),
             payload.get("status"),
         )
+        if str(payload.get("status")) == "completed":
+            try:
+                details_raw = payload.get("details", "{}")
+                details = json.loads(details_raw) if isinstance(details_raw, str) else {}
+                workflow_updates = details.get("workflow_updates", {})
+                if thread_id.startswith("incident::"):
+                    fingerprint = thread_id.replace("incident::", "")
+                    from src.app.incident_registry import get as get_incident
+                    from src.app.review_bridge import send_review_notification
+
+                    entry = get_incident(fingerprint)
+                    if entry and entry.get("status") not in ("resolved", "suppressed"):
+                        send_review_notification(
+                            fingerprint=fingerprint,
+                            service=entry.get("service", ""),
+                            exception_type=entry.get("exception_type", ""),
+                            traceback_summary=entry.get("sample_traceback", ""),
+                            branch_name=str(workflow_updates.get("branch_name", "")),
+                            commit_sha=str(workflow_updates.get("commit_sha", "")),
+                            pr_url=str(workflow_updates.get("pr_url", "")),
+                        )
+            except Exception as exc:
+                logger.warning("review_bridge.auto_notify.error error=%s", exc)
         return True
 
     # ------------------------------------------------------------------ #

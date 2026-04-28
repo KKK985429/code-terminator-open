@@ -80,7 +80,6 @@ start_service() {
   local port="$3"
   local service_name="$4"
   shift 4
-  local extra_env=("$@")
   local logfile="$LOG_DIR/$name.log"
   local pidfile="$PID_DIR/$name.pid"
   if [[ -f "$pidfile" ]] && kill -0 "$(cat "$pidfile")" 2>/dev/null; then
@@ -89,7 +88,7 @@ start_service() {
   fi
 
   local env_prefix=""
-  for kv in "${extra_env[@]}"; do
+  for kv in "$@"; do
     env_prefix+="export ${kv}; "
   done
   nohup bash -lc "

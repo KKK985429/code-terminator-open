@@ -8,7 +8,13 @@ from pydantic import BaseModel, Field
 
 AgentRole = Literal["leader", "worker", "reviewer"]
 PlanStatus = Literal["pending", "in_progress", "completed", "failed"]
-EventType = Literal["user_input", "subagent_result", "system"]
+EventType = Literal[
+    "user_input",
+    "subagent_result",
+    "incident_new",
+    "incident_regressed",
+    "system",
+]
 
 
 class TaskUnit(BaseModel):
@@ -59,6 +65,7 @@ class PlanItem(BaseModel):
     )
     source_event: EventType = "system"
     assignee: AgentRole | Literal["unassigned"] = "unassigned"
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class EventEnvelope(BaseModel):
