@@ -8,6 +8,7 @@ from src.agents.worker import (
     _build_tool_proxy_env,
     _containerize_proxy_url,
     _default_worker_docker_image,
+    _parse_worker_json_output,
     _resolve_passthrough_env_values,
     _should_use_host_network_for_git_proxy,
     execute_leader_assignment,
@@ -31,8 +32,32 @@ def test_containerize_proxy_url_rewrites_localhost_for_docker() -> None:
     )
 
 
+def test_parse_worker_json_output_accepts_fenced_json() -> None:
+    payload = _parse_worker_json_output(
+        """```json
+{
+  "summary": "ok",
+  "verification": ["check"],
+  "risks": [],
+  "changed_files": ["worker_smoke.txt"],
+  "workflow_updates": {}
+}
+```"""
+    )
+
+    assert payload == {
+        "summary": "ok",
+        "verification": ["check"],
+        "risks": [],
+        "changed_files": ["worker_smoke.txt"],
+        "workflow_updates": {},
+    }
+
+
 def test_worker_config_uses_local_defaults(monkeypatch: object) -> None:
     monkeypatch.delenv("CODEX_WORKER_DOCKER_IMAGE", raising=False)
+    monkeypatch.delenv("KIMI_WORKER_DOCKER_IMAGE", raising=False)
+    monkeypatch.delenv("KIMI_WORKER_BIN", raising=False)
     monkeypatch.delenv("CODEX_WORKER_HOST_NODE_ROOT", raising=False)
     monkeypatch.setattr(
         "src.agents.worker.shutil.which",
@@ -50,7 +75,7 @@ def test_worker_config_uses_local_defaults(monkeypatch: object) -> None:
     assert config.docker_image == _default_worker_docker_image()
     assert config.host_node_root == "/root/.nvm/versions/node/v24.14.1"
     assert config.container_host_node_root == "/opt/host-node"
-    assert config.codex_bin == "codex"
+    assert config.codex_bin == "kimi"
 
 
 def test_build_git_config_env_uses_git_only_proxy(monkeypatch: object) -> None:
@@ -149,12 +174,10 @@ def test_execute_leader_assignment_injects_git_proxy_not_global_proxy(
     markdown.write_text("# task\n", encoding="utf-8")
     json_path.write_text("{}", encoding="utf-8")
 
-    monkeypatch.setenv("CODEX_WORKER_DOCKER_IMAGE", "worker-image:test")
-    host_node_root = tmp_path / "host-node"
-    host_node_root.mkdir()
-    codex_home = tmp_path / ".codex"
-    codex_home.mkdir()
-    monkeypatch.setenv("CODEX_WORKER_HOST_NODE_ROOT", str(host_node_root))
+    monkeypatch.setenv("KIMI_WORKER_DOCKER_IMAGE", "worker-image:test")
+    kimi_home = tmp_path / ".kimi"
+    kimi_home.mkdir()
+    (kimi_home / "config.toml").write_text("default_model = \"kimi-test\"\n", encoding="utf-8")
     monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:7890")
     monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:7890")
     monkeypatch.setenv("CODE_TERMINATOR_API_STATE_ROOT", str(tmp_path / "runtime-state"))
@@ -232,16 +255,19 @@ def test_execute_leader_assignment_injects_git_proxy_not_global_proxy(
     assert "GIT_CONFIG_KEY_2=https.proxy" in command
     assert "GIT_CONFIG_VALUE_2=http://127.0.0.1:7890" in command
     assert "--add-host" not in command
+    assert "--entrypoint" in command
     assert "bash" in command
     assert "-lc" in command
     assert "codex.stdout.log" in command[-1]
     assert "codex.stderr.log" in command[-1]
     assert "codex.internal.log" in command[-1]
-    assert "/usr/bin/env" in command[-1]
-    assert command[-1].count("-u") >= 4
+    assert 'KIMI_PROMPT="$(cat "$PROMPT_FILE")"' in command[-1]
+    assert 'kimi --print --final-message-only -c "$KIMI_PROMPT"' in command[-1]
+    assert "/host-kimi/config.toml" in command[-1]
     joined_command = " ".join(command)
     assert "-e HTTP_PROXY" not in joined_command
     assert "-e HTTPS_PROXY" not in joined_command
+    assert "/host-kimi:ro" in joined_command
     env = captured["env"]
     assert isinstance(env, dict)
     assert env["GITHUB_TOKEN"] == "runtime-token"
@@ -260,12 +286,10 @@ def test_execute_leader_assignment_uses_isolated_workspace_and_proxy_wrapper(
     markdown.write_text("# task\n", encoding="utf-8")
     json_path.write_text("{}", encoding="utf-8")
 
-    monkeypatch.setenv("CODEX_WORKER_DOCKER_IMAGE", "worker-image:test")
-    host_node_root = tmp_path / "host-node"
-    host_node_root.mkdir()
-    codex_home = tmp_path / ".codex"
-    codex_home.mkdir()
-    monkeypatch.setenv("CODEX_WORKER_HOST_NODE_ROOT", str(host_node_root))
+    monkeypatch.setenv("KIMI_WORKER_DOCKER_IMAGE", "worker-image:test")
+    kimi_home = tmp_path / ".kimi"
+    kimi_home.mkdir()
+    (kimi_home / "config.toml").write_text("default_model = \"kimi-test\"\n", encoding="utf-8")
     monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:7890")
     monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:7890")
     monkeypatch.setenv("CODE_TERMINATOR_API_STATE_ROOT", str(tmp_path / "runtime-state"))
@@ -362,6 +386,8 @@ def test_execute_leader_assignment_uses_isolated_workspace_and_proxy_wrapper(
     assert "codex.stdout.log" in command[-1]
     assert "codex.stderr.log" in command[-1]
     assert "codex.internal.log" in command[-1]
+    assert 'KIMI_PROMPT="$(cat "$PROMPT_FILE")"' in command[-1]
+    assert 'kimi --print --final-message-only -c "$KIMI_PROMPT"' in command[-1]
     proxy_wrapper = Path(report["proxy_wrapper_path"])
     assert proxy_wrapper.is_file()
     wrapper_text = proxy_wrapper.read_text(encoding="utf-8")

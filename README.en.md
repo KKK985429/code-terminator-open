@@ -137,6 +137,60 @@ Leader-specific regression suites:
 uv run pytest tests/test_leader_event_runtime.py tests/test_leader_query_set.py
 ```
 
+## Kimi Local Integration
+
+This repository now includes a real local-only Kimi Docker integration case.
+
+It verifies:
+
+- the real async `call_code_worker` path
+- Kimi execution inside Docker
+- local file creation inside the isolated worker workspace
+- structured JSON parsing from the Kimi response
+- no GitHub usage and no remote repository usage
+
+Config template:
+
+```bash
+configs/kimi-local-integration.env.example
+```
+
+Manual run:
+
+```bash
+set -a
+source configs/kimi-local-integration.env.example
+export OPENAI_BASE_URL="https://your-openai-compatible-endpoint"
+export OPENAI_API_KEY="your-api-key"
+set +a
+
+uv run --python python3.12 python scripts/run_kimi_local_integration.py
+```
+
+Optional pytest entrypoint:
+
+```bash
+RUN_KIMI_LOCAL_INTEGRATION=1 \
+OPENAI_BASE_URL="https://your-openai-compatible-endpoint" \
+OPENAI_API_KEY="your-api-key" \
+uv run --python python3.12 pytest -q tests/test_kimi_local_integration.py
+```
+
+Detailed guide:
+
+```text
+docs/kimi-local-integration.md
+```
+
+Supporting files:
+
+```text
+docs/kimi-local-integration-checklist.md
+docs/kimi-local-integration-troubleshooting.md
+scripts/run_kimi_local_integration.sh
+configs/kimi-local-integration.dashscope.env.example
+```
+
 ## Memory Storage
 
 Memory files are stored in a local `.memory/` directory (created lazily by runtime code):

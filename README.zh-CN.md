@@ -163,6 +163,64 @@ Worker 执行时会：
 3. 启动 Docker 容器
 4. 把结果、stdout、stderr、内部日志都落盘
 
+### Kimi 本地集成用例
+
+仓库现在附带了一个真实的本地 Kimi Docker 集成用例，专门验证：
+
+- `call_code_worker` 的真实异步链路
+- Docker 内部能正常拉起 Kimi
+- Worker 只在隔离工作区里写本地文件
+- hook 回传的 `structured_output` 可以被主流程正确解析
+- 全程不触发 GitHub 或远端仓库操作
+
+配置样例：
+
+```bash
+configs/kimi-local-integration.env.example
+```
+
+手动运行：
+
+```bash
+uv run --python python3.12 python scripts/run_kimi_local_integration.py
+```
+
+如果你希望显式指定 API 参数：
+
+```bash
+set -a
+source configs/kimi-local-integration.env.example
+export OPENAI_BASE_URL="https://your-openai-compatible-endpoint"
+export OPENAI_API_KEY="your-api-key"
+set +a
+
+uv run --python python3.12 python scripts/run_kimi_local_integration.py
+```
+
+如果你要把它作为真实 pytest 用例运行，需要显式开启：
+
+```bash
+RUN_KIMI_LOCAL_INTEGRATION=1 \
+OPENAI_BASE_URL="https://your-openai-compatible-endpoint" \
+OPENAI_API_KEY="your-api-key" \
+uv run --python python3.12 pytest -q tests/test_kimi_local_integration.py
+```
+
+详细说明见：
+
+```text
+docs/kimi-local-integration.md
+```
+
+辅助文件：
+
+```text
+docs/kimi-local-integration-checklist.md
+docs/kimi-local-integration-troubleshooting.md
+scripts/run_kimi_local_integration.sh
+configs/kimi-local-integration.dashscope.env.example
+```
+
 ## Configuration
 
 ### Core Runtime
