@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from src.agents.worker import (
     _build_git_config_env,
     _build_tool_proxy_env,
+    _append_openai_host_to_no_proxy,
     _containerize_proxy_url,
     _default_worker_docker_image,
     _parse_worker_json_output,
@@ -124,6 +125,33 @@ def test_build_tool_proxy_env_rewrites_loopback_for_docker(monkeypatch: object) 
     assert tool_env["HTTPS_PROXY"] == "http://host.docker.internal:7890"
     assert tool_env["ALL_PROXY"] == "socks5h://host.docker.internal:7891"
     assert tool_env["NO_PROXY"] == "localhost,127.0.0.1"
+
+
+def test_append_openai_host_to_no_proxy_adds_api_host(monkeypatch: object) -> None:
+    monkeypatch.setenv(
+        "OPENAI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    )
+    env = {"NO_PROXY": "localhost,127.0.0.1"}
+
+    _append_openai_host_to_no_proxy(env)
+
+    assert env["NO_PROXY"] == "localhost,127.0.0.1,dashscope.aliyuncs.com"
+
+
+def test_build_tool_proxy_env_appends_openai_host_to_no_proxy(
+    monkeypatch: object,
+) -> None:
+    monkeypatch.setenv("HTTP_PROXY", "http://127.0.0.1:7890")
+    monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:7890")
+    monkeypatch.setenv("NO_PROXY", "localhost,127.0.0.1")
+    monkeypatch.setenv(
+        "OPENAI_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    )
+
+    config = WorkerCodexConfig.from_env()
+    tool_env = _build_tool_proxy_env(config, use_host_network=False)
+
+    assert tool_env["NO_PROXY"] == "localhost,127.0.0.1,dashscope.aliyuncs.com"
 
 
 def test_should_use_host_network_for_loopback_git_proxy(monkeypatch: object) -> None:

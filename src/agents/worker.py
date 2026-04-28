@@ -323,7 +323,28 @@ def _build_tool_proxy_env(
         if key != "NO_PROXY" and not use_host_network:
             normalized = _containerize_proxy_url(normalized)
         env[key] = normalized
+    _append_openai_host_to_no_proxy(env)
     return env
+
+
+def _append_openai_host_to_no_proxy(env: dict[str, str]) -> None:
+    api_base_url = os.getenv("OPENAI_BASE_URL", "").strip()
+    if not api_base_url:
+        return
+    hostname = urlsplit(api_base_url).hostname
+    if not hostname:
+        return
+
+    existing = env.get("NO_PROXY", "").strip()
+    if not existing:
+        env["NO_PROXY"] = hostname
+        return
+
+    parts = [part.strip() for part in existing.split(",") if part.strip()]
+    if hostname in parts:
+        return
+    parts.append(hostname)
+    env["NO_PROXY"] = ",".join(parts)
 
 
 def _needs_host_gateway(command: list[str], *env_maps: dict[str, str]) -> bool:
