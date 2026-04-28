@@ -10,7 +10,7 @@ import sys
 import time
 from urllib.parse import urlsplit, urlunsplit
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +25,7 @@ from src.skills.registry import SkillRegistry
 from src.tools.registry import ToolRegistry
 
 logger = get_logger(__name__)
+UTC = timezone.utc
 _DEFAULT_WORKER_DOCKER_IMAGE = "kimi-cliagent-benchmark:latest"
 _PROXY_WRAPPER_NAME = "with-proxy"
 WORKER_RESULT_JSON_SCHEMA: dict[str, Any] = {
