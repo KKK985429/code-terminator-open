@@ -255,6 +255,30 @@ configs/kimi-local-integration.dashscope.env.example
 
 它可以从 Web UI 或 `PUT /api/settings/runtime` 写入，随后会自动注入 Worker 的 `GITHUB_TOKEN` / `GH_TOKEN`。
 
+同一组运行时设置里还包含：
+
+- `auto_review_merge_reload`
+
+这个开关开启后，worker 完成并返回 `pr_url` 时，系统会优先走自动路径：
+
+1. 用 GitHub API 给 PR 执行 approve
+2. 用 GitHub API 执行 squash merge
+3. 删除 worker 创建的分支
+4. 将 incident 标记为 `approved`
+5. 由 deploy watcher 拉取最新代码并触发热重载
+
+如果自动路径失败，系统会回退到原来的飞书 review 通知流程。
+
+服务器侧建议额外配置：
+
+- `CODE_TERMINATOR_DEPLOY_BRANCH`：热重载时要拉取的目标分支，默认优先使用当前检出分支，未能识别时回退到 `main`
+- `CODE_TERMINATOR_AGENT_ENABLE_INGEST=1`：保持日志监听启用
+
+注意：
+
+- GitHub token 需要具备 PR review / merge / delete branch 权限
+- 如果仓库启用了强制人工 review 或分支保护，自动 merge 仍可能被 GitHub 拒绝，这是仓库规则，不是本地代码问题
+
 ### Leader Tuning
 
 | 变量 | 默认值 | 说明 |

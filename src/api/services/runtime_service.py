@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import shutil
+from urllib.parse import quote
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -81,7 +82,10 @@ class RuntimeService:
     def update_runtime_settings(
         self, request: RuntimeSettingsUpdateRequest
     ) -> RuntimeSettingsResponse:
-        settings = save_runtime_settings(github_token=request.github_token)
+        settings = save_runtime_settings(
+            github_token=request.github_token,
+            auto_review_merge_reload=request.auto_review_merge_reload,
+        )
         return RuntimeSettingsResponse.model_validate(settings.model_dump())
 
     def list_agent_status(self) -> AgentStatusResponse:
@@ -641,20 +645,35 @@ class RuntimeService:
                 workflow_updates = details.get("workflow_updates", {})
                 if thread_id.startswith("incident::"):
                     fingerprint = thread_id.replace("incident::", "")
+                    from src.app.auto_review_merge import (
+                        auto_review_merge_reload,
+                    )
                     from src.app.incident_registry import get as get_incident
                     from src.app.review_bridge import send_review_notification
 
                     entry = get_incident(fingerprint)
                     if entry and entry.get("status") not in ("resolved", "suppressed"):
-                        send_review_notification(
-                            fingerprint=fingerprint,
-                            service=entry.get("service", ""),
-                            exception_type=entry.get("exception_type", ""),
-                            traceback_summary=entry.get("sample_traceback", ""),
-                            branch_name=str(workflow_updates.get("branch_name", "")),
-                            commit_sha=str(workflow_updates.get("commit_sha", "")),
-                            pr_url=str(workflow_updates.get("pr_url", "")),
-                        )
+                        settings = load_runtime_settings()
+                        common = {
+                            "fingerprint": fingerprint,
+                            "service": entry.get("service", ""),
+                            "exception_type": entry.get("exception_type", ""),
+                            "traceback_summary": entry.get("sample_traceback", ""),
+                            "branch_name": str(workflow_updates.get("branch_name", "")),
+                            "commit_sha": str(workflow_updates.get("commit_sha", "")),
+                            "pr_url": str(workflow_updates.get("pr_url", "")),
+                        }
+                        if settings.auto_review_merge_reload:
+                            result = auto_review_merge_reload(**common)
+                            if not result.get("ok"):
+                                logger.warning(
+                                    "auto_review_merge.failed fingerprint=%s error=%s",
+                                    fingerprint,
+                                    result.get("error", ""),
+                                )
+                                send_review_notification(**common)
+                        else:
+                            send_review_notification(**common)
             except Exception as exc:
                 logger.warning("review_bridge.auto_notify.error error=%s", exc)
         return True
@@ -769,10 +788,10 @@ class RuntimeService:
         }
 
     def _conversation_path(self, conversation_id: str) -> Path:
-        return self._state_root / "conversations" / f"{conversation_id}.json"
+        return self._state_root / "conversations" / f"{_safe_runtime_filename(conversation_id)}.json"
 
     def _plan_path(self, conversation_id: str) -> Path:
-        return self._state_root / "plans" / f"{conversation_id}.json"
+        return self._state_root / "plans" / f"{_safe_runtime_filename(conversation_id)}.json"
 
     def _conversation_id_for_thread(self, thread_id: str) -> str:
         for conversation_id, stored_thread_id in self._threads.items():
@@ -845,3 +864,8 @@ class RuntimeService:
             return PlanSnapshotResponse.model_validate(payload)
         except Exception:
             return None
+
+
+def _safe_runtime_filename(value: str) -> str:
+    encoded = quote(value.strip() or "default", safe="")
+    return encoded or "default"
