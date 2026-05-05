@@ -13,11 +13,12 @@ logger = get_logger(__name__)
 _REPO_ROOT = Path(__file__).parent.parent.parent.resolve()
 
 
-def git_fetch() -> bool:
+def git_fetch(*, repo_root: Path | str | None = None) -> bool:
+    root = _resolve_repo_root(repo_root)
     try:
         result = subprocess.run(
             ["git", "fetch", "origin"],
-            cwd=_REPO_ROOT,
+            cwd=root,
             capture_output=True,
             text=True,
             timeout=30,
@@ -33,18 +34,21 @@ def git_fetch() -> bool:
         return False
 
 
-def git_pull(branch: str | None = None) -> dict[str, Any]:
-    branch = branch or _deploy_branch()
-    before_sha = _current_sha()
+def git_pull(
+    branch: str | None = None, *, repo_root: Path | str | None = None
+) -> dict[str, Any]:
+    root = _resolve_repo_root(repo_root)
+    branch = branch or _deploy_branch(root)
+    before_sha = _current_sha(root)
     try:
         result = subprocess.run(
             ["git", "pull", "--ff-only", "origin", branch],
-            cwd=_REPO_ROOT,
+            cwd=root,
             capture_output=True,
             text=True,
             timeout=60,
         )
-        after_sha = _current_sha()
+        after_sha = _current_sha(root)
         success = result.returncode == 0
         logger.info(
             "gitops.pull branch=%s before=%s after=%s success=%s",
@@ -73,11 +77,12 @@ def git_pull(branch: str | None = None) -> dict[str, Any]:
         }
 
 
-def _current_sha() -> str:
+def _current_sha(repo_root: Path | str | None = None) -> str:
+    root = _resolve_repo_root(repo_root)
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
-            cwd=_REPO_ROOT,
+            cwd=root,
             capture_output=True,
             text=True,
             timeout=10,
@@ -87,19 +92,20 @@ def _current_sha() -> str:
         return ""
 
 
-def _deploy_branch() -> str:
+def _deploy_branch(repo_root: Path) -> str:
     configured = os.getenv("CODE_TERMINATOR_DEPLOY_BRANCH", "").strip()
     if configured:
         return configured
-    current = _current_branch()
+    current = _current_branch(repo_root)
     return current or "main"
 
 
-def _current_branch() -> str:
+def _current_branch(repo_root: Path | str | None = None) -> str:
+    root = _resolve_repo_root(repo_root)
     try:
         result = subprocess.run(
             ["git", "branch", "--show-current"],
-            cwd=_REPO_ROOT,
+            cwd=root,
             capture_output=True,
             text=True,
             timeout=10,
@@ -107,3 +113,9 @@ def _current_branch() -> str:
         return result.stdout.strip()
     except Exception:
         return ""
+
+
+def _resolve_repo_root(repo_root: Path | str | None) -> Path:
+    if repo_root is None:
+        return _REPO_ROOT
+    return Path(repo_root).expanduser().resolve()

@@ -13,6 +13,10 @@ from src.tools.call_code_worker_tool import CallCodeWorkerTool
 
 def test_docker_worker_emits_hook_to_bus(monkeypatch: Any, tmp_path: Path) -> None:
     monkeypatch.setenv("CODE_TERMINATOR_HOOK_ROOT", str(tmp_path / "hook-events"))
+    monkeypatch.setenv(
+        "CODE_TERMINATOR_ECOMMERCE_REPO_URL",
+        "https://github.com/KKK985429/ecommerce-platform-demo.git",
+    )
     HookEventBus.clear()
 
     def fake_execute_leader_assignment(**kwargs: Any) -> dict[str, Any]:
@@ -74,6 +78,7 @@ def test_docker_worker_emits_hook_to_bus(monkeypatch: Any, tmp_path: Path) -> No
     assert details["leader_task_markdown"].endswith(".md")
     assert details["leader_task_json"].endswith(".json")
     assert details["job_directory"].startswith(str(tmp_path.resolve()))
+    assert details["repo_url"] == "https://github.com/KKK985429/ecommerce-platform-demo.git"
 
 
 def test_runtime_hook_pump_delivers_subagent_result(

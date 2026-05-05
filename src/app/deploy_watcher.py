@@ -5,24 +5,20 @@ import os
 import subprocess
 import time
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any
 
+from src.app.ecommerce_target import (
+    ecommerce_deploy_branch,
+    ecommerce_reload_script,
+    ecommerce_root,
+    ecommerce_stop_script,
+)
 from src.app.incident_registry import all_entries, get, upsert
 from src.app.gitops import git_fetch, git_pull
 from src.observability import get_logger
 
 logger = get_logger(__name__)
 
-_ECOMMERCE_ROOT = Path(__file__).parent.parent.parent / "ecommerce-platform"
-_RELOAD_SCRIPT = os.getenv(
-    "CODE_TERMINATOR_ECOMMERCE_RELOAD_SCRIPT",
-    str(_ECOMMERCE_ROOT / "scripts" / "run_local_reload_stack.sh"),
-)
-_STOP_SCRIPT = os.getenv(
-    "CODE_TERMINATOR_ECOMMERCE_STOP_SCRIPT",
-    str(_ECOMMERCE_ROOT / "scripts" / "stop_local_reload_stack.sh"),
-)
 _HEALTH_CHECK_URL = "http://127.0.0.1:58080/health"
 _VERIFY_WINDOW_SECONDS = 120
 
@@ -51,8 +47,9 @@ async def _handle_approved(entry: dict[str, Any]) -> None:
     upsert(fingerprint, status="merged")
 
     # 第一步：git fetch + pull
-    git_fetch()
-    pull_result = git_pull()
+    target_root = ecommerce_root()
+    git_fetch(repo_root=target_root)
+    pull_result = git_pull(branch=ecommerce_deploy_branch(), repo_root=target_root)
 
     if not pull_result["ok"]:
         logger.warning(
@@ -157,8 +154,8 @@ async def _restart_stack() -> None:
 
 
 def _sync_stop_stack() -> None:
-    subprocess.run(["bash", _STOP_SCRIPT], timeout=30, check=False)
+    subprocess.run(["bash", ecommerce_stop_script()], timeout=30, check=False)
 
 
 def _sync_start_stack() -> None:
-    subprocess.run(["bash", _RELOAD_SCRIPT], timeout=60, check=False)
+    subprocess.run(["bash", ecommerce_reload_script()], timeout=60, check=False)

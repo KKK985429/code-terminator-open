@@ -7,13 +7,17 @@ Use this checklist before enabling automatic incident repair on a server clone.
 - Save a GitHub token from the Web UI or `PUT /api/settings/runtime`.
 - Enable `auto_review_merge_reload` in the same runtime settings payload.
 - Set `CODE_TERMINATOR_AGENT_ENABLE_INGEST=1` so the log listener stays active.
-- Set `CODE_TERMINATOR_DEPLOY_BRANCH` to the branch the server should pull after merge.
+- Set `CODE_TERMINATOR_ECOMMERCE_REPO_URL` to the GitHub repository that contains the ecommerce demo.
+- Set `CODE_TERMINATOR_ECOMMERCE_ROOT` to the local checkout path for that ecommerce repository.
+- Set `CODE_TERMINATOR_ECOMMERCE_DEPLOY_BRANCH` to the branch the server should pull after merge.
 
 Example:
 
 ```bash
 export CODE_TERMINATOR_AGENT_ENABLE_INGEST=1
-export CODE_TERMINATOR_DEPLOY_BRANCH=main
+export CODE_TERMINATOR_ECOMMERCE_REPO_URL=https://github.com/KKK985429/ecommerce-platform-demo.git
+export CODE_TERMINATOR_ECOMMERCE_ROOT=/mnt/paper2any/xbr/code111/ecommerce-platform-demo
+export CODE_TERMINATOR_ECOMMERCE_DEPLOY_BRANCH=main
 ```
 
 ## GitHub Token Permissions
@@ -28,9 +32,9 @@ The token must be able to:
 ## Expected Flow
 
 1. The log listener opens or resumes an incident.
-2. The worker fixes the issue and returns `workflow_updates.pr_url`.
+2. The worker clones `CODE_TERMINATOR_ECOMMERCE_REPO_URL`, fixes the issue, and returns `workflow_updates.pr_url`.
 3. The runtime auto-approves and squash-merges the PR through the GitHub API.
 4. The incident is marked `approved`.
-5. The deploy watcher pulls `CODE_TERMINATOR_DEPLOY_BRANCH`.
+5. The deploy watcher pulls `CODE_TERMINATOR_ECOMMERCE_DEPLOY_BRANCH` inside `CODE_TERMINATOR_ECOMMERCE_ROOT`.
 6. The ecommerce reload stack refreshes and health checks the gateway.
 7. The incident moves from `deployed` to `resolved` after the verification window.
