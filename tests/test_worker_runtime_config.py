@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -73,8 +74,11 @@ def test_worker_config_uses_local_defaults(monkeypatch: object) -> None:
     config = WorkerCodexConfig.from_env()
 
     assert config.docker_image == _default_worker_docker_image()
-    assert config.host_node_root == "/root/.nvm/versions/node/v24.14.1"
-    assert config.container_host_node_root == "/opt/host-node"
+    if sys.platform.startswith("linux"):
+        assert config.host_node_root == "/root/.nvm/versions/node/v24.14.1"
+        assert config.container_host_node_root == "/opt/host-node"
+    else:
+        assert config.host_node_root in {"", "/root/.nvm/versions/node/v24.14.1"}
     assert config.codex_bin == "kimi"
 
 
@@ -132,7 +136,7 @@ def test_should_use_host_network_for_loopback_git_proxy(monkeypatch: object) -> 
 
     config = WorkerCodexConfig.from_env()
 
-    assert _should_use_host_network_for_git_proxy(config) is True
+    assert _should_use_host_network_for_git_proxy(config) is sys.platform.startswith("linux")
 
 
 def test_resolve_passthrough_env_values_uses_runtime_settings_for_github_token(
@@ -242,8 +246,11 @@ def test_execute_leader_assignment_injects_git_proxy_not_global_proxy(
     command = report["docker_command"]
 
     assert report["status"] == "completed"
-    assert "--network" in command
-    assert "host" in command
+    if sys.platform.startswith("linux"):
+        assert "--network" in command
+        assert "host" in command
+    else:
+        assert "--network" not in command
     assert "-e" in command
     assert "GITHUB_TOKEN" in command
     assert "GH_TOKEN" in command
@@ -251,10 +258,19 @@ def test_execute_leader_assignment_injects_git_proxy_not_global_proxy(
     assert "GIT_CONFIG_KEY_0=http.version" in command
     assert "GIT_CONFIG_VALUE_0=HTTP/1.1" in command
     assert "GIT_CONFIG_KEY_1=http.proxy" in command
-    assert "GIT_CONFIG_VALUE_1=http://127.0.0.1:7890" in command
+    expected_proxy = (
+        "http://127.0.0.1:7890"
+        if sys.platform.startswith("linux")
+        else "http://host.docker.internal:7890"
+    )
+    assert f"GIT_CONFIG_VALUE_1={expected_proxy}" in command
     assert "GIT_CONFIG_KEY_2=https.proxy" in command
-    assert "GIT_CONFIG_VALUE_2=http://127.0.0.1:7890" in command
-    assert "--add-host" not in command
+    assert f"GIT_CONFIG_VALUE_2={expected_proxy}" in command
+    if sys.platform.startswith("linux"):
+        assert "--add-host" not in command
+    else:
+        assert "--add-host" in command
+        assert "host.docker.internal:host-gateway" in command
     assert "--entrypoint" in command
     assert "bash" in command
     assert "-lc" in command
@@ -391,5 +407,10 @@ def test_execute_leader_assignment_uses_isolated_workspace_and_proxy_wrapper(
     proxy_wrapper = Path(report["proxy_wrapper_path"])
     assert proxy_wrapper.is_file()
     wrapper_text = proxy_wrapper.read_text(encoding="utf-8")
-    assert "export HTTP_PROXY=http://127.0.0.1:7890" in wrapper_text
+    expected_tool_proxy = (
+        "http://127.0.0.1:7890"
+        if sys.platform.startswith("linux")
+        else "http://host.docker.internal:7890"
+    )
+    assert f"export HTTP_PROXY={expected_tool_proxy}" in wrapper_text
     assert 'exec "$@"' in wrapper_text
