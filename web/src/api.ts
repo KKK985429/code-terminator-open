@@ -45,11 +45,15 @@ export function fetchPlanSnapshot(conversationId: string): Promise<PlanSnapshotR
   return request<PlanSnapshotResponse>(`/api/conversations/${conversationId}/plan`);
 }
 
-export function saveRuntimeSettings(githubToken: string): Promise<RuntimeSettings> {
+export function saveRuntimeSettings(
+  githubToken: string,
+  autoReviewMergeReload: boolean,
+): Promise<RuntimeSettings> {
   return request<RuntimeSettings>("/api/settings/runtime", {
     method: "PUT",
     body: JSON.stringify({
       github_token: githubToken,
+      auto_review_merge_reload: autoReviewMergeReload,
     }),
   });
 }

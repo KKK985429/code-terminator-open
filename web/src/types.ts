@@ -37,6 +37,7 @@ export type ChatHistoryResponse = {
 
 export type RuntimeSettings = {
   github_token: string;
+  auto_review_merge_reload: boolean;
   updated_at: string;
 };
 
