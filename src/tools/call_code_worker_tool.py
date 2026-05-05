@@ -22,11 +22,9 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+from src.app.ecommerce_target import ecommerce_repo_url
 from src.app.hook_bus import HookEventBus
 from src.app.state import PlanItem
-
-
-DEFAULT_CODE_WORKER_REPO_URL = "https://github.com/KKK985429/code-terminator-open"
 
 
 @dataclass
@@ -221,7 +219,7 @@ class CallCodeWorkerTool:
         if not acceptance_criteria:
             acceptance_criteria = details or target_item.content.strip()
         repo_url = (
-            str(workflow.get("repo_url", "")).strip() or DEFAULT_CODE_WORKER_REPO_URL
+            str(workflow.get("repo_url", "")).strip() or ecommerce_repo_url()
         )
         collaboration_target = str(workflow.get("collaboration_target", "")).strip()
         local_repo_path = ""

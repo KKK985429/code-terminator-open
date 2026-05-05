@@ -5,12 +5,9 @@ import os
 from pathlib import Path
 from typing import Any, Generator
 
-_LOG_FILE = Path(
-    os.getenv(
-        "ECOMMERCE_LOG_FILE",
-        "ecommerce-platform/logs/ecommerce-debug.jsonl",
-    )
-)
+from src.app.ecommerce_target import ecommerce_log_file
+
+_LOG_FILE = ecommerce_log_file()
 
 _OFFSET_FILE = Path(
     os.getenv(
