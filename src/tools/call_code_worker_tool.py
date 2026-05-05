@@ -206,8 +206,10 @@ class CallCodeWorkerTool:
         details = target_item.details.strip()
         parsed_details = self._parse_detail_payload(details)
         job_root = self._resolve_job_root(workflow=workflow)
-        thread_stem = thread_id or "thread-unset"
-        job_directory = job_root / thread_stem / f"{task_id}__{subworker_id}"
+        thread_stem = self._safe_path_segment(thread_id or "thread-unset")
+        task_stem = self._safe_path_segment(task_id or "task-unset")
+        subworker_stem = self._safe_path_segment(subworker_id or "subworker-unset")
+        job_directory = job_root / thread_stem / f"{task_stem}__{subworker_stem}"
         job_directory.mkdir(parents=True, exist_ok=True)
 
         work_content = parsed_details.get("work_content", "").strip()
@@ -297,6 +299,14 @@ class CallCodeWorkerTool:
                 root = (Path.cwd() / root).resolve()
             return root
         return (Path.cwd() / ".code-terminator" / "worker-jobs").resolve()
+
+    @staticmethod
+    def _safe_path_segment(value: str) -> str:
+        cleaned = "".join(
+            char if char.isalnum() or char in {"-", "_", "."} else "-"
+            for char in value.strip()
+        ).strip(".-_")
+        return cleaned or "unset"
 
     @staticmethod
     def _parse_detail_payload(details: str) -> dict[str, str]:
