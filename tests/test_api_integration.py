@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import AsyncIterator
 from contextlib import contextmanager
 from typing import Any
@@ -10,7 +11,7 @@ from fastapi.testclient import TestClient
 from src.api.app import create_app
 from src.api.deps import runtime_service
 from src.app.runtime_event_bus import RuntimeEventBus
-from src.runtime_settings import runtime_settings_path
+from src.runtime_settings import runtime_settings_path, save_runtime_settings
 
 
 @contextmanager
@@ -43,17 +44,102 @@ def test_runtime_settings_roundtrip(monkeypatch: Any, tmp_path: Any) -> None:
         get_resp = c.get("/api/settings/runtime")
         assert get_resp.status_code == 200
         assert get_resp.json()["github_token"] == ""
+        assert get_resp.json()["auto_review_merge_reload"] is False
 
         update_resp = c.put(
             "/api/settings/runtime",
-            json={"github_token": "runtime-token-123"},
+            json={
+                "github_token": "runtime-token-123",
+                "auto_review_merge_reload": True,
+            },
         )
         assert update_resp.status_code == 200
         assert update_resp.json()["github_token"] == "runtime-token-123"
+        assert update_resp.json()["auto_review_merge_reload"] is True
 
         get_again = c.get("/api/settings/runtime")
         assert get_again.status_code == 200
         assert get_again.json()["github_token"] == "runtime-token-123"
+        assert get_again.json()["auto_review_merge_reload"] is True
+
+
+def test_worker_completion_uses_auto_review_when_enabled(
+    monkeypatch: Any, tmp_path: Any
+) -> None:
+    monkeypatch.setenv("CODE_TERMINATOR_API_STATE_ROOT", str(tmp_path / "runtime-state"))
+    save_runtime_settings(github_token="runtime-token", auto_review_merge_reload=True)
+
+    calls: dict[str, int] = {"auto": 0, "feishu": 0}
+
+    def fake_get_incident(fingerprint: str) -> dict[str, str]:
+        assert fingerprint == "fp-auto"
+        return {
+            "status": "waiting_review",
+            "service": "inventory-service",
+            "exception_type": "ValueError",
+            "sample_traceback": "trace",
+        }
+
+    def fake_auto_review_merge_reload(**kwargs: Any) -> dict[str, Any]:
+        calls["auto"] += 1
+        assert kwargs["fingerprint"] == "fp-auto"
+        assert kwargs["pr_url"] == "https://github.com/acme/repo/pull/7"
+        return {"ok": True}
+
+    def fake_send_review_notification(**kwargs: Any) -> bool:
+        del kwargs
+        calls["feishu"] += 1
+        return True
+
+    async def fake_run(
+        task: str,
+        *,
+        thread_id: str | None = None,
+        resume: bool = False,
+        checkpoint_id: str | None = None,
+        current_event: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        del task, thread_id, resume, checkpoint_id, current_event
+        return {"final_output": "", "task_units": []}
+
+    monkeypatch.setattr("src.api.services.runtime_service.run", fake_run)
+    monkeypatch.setattr("src.app.incident_registry.get", fake_get_incident)
+    monkeypatch.setattr(
+        "src.app.auto_review_merge.auto_review_merge_reload",
+        fake_auto_review_merge_reload,
+    )
+    monkeypatch.setattr(
+        "src.app.review_bridge.send_review_notification",
+        fake_send_review_notification,
+    )
+
+    event = {
+        "event_type": "subagent_result",
+        "payload": {
+            "task_id": "task-1",
+            "status": "completed",
+            "role": "worker",
+            "details": json.dumps(
+                {
+                    "workflow_updates": {
+                        "branch_name": "worker-fix",
+                        "commit_sha": "abc123",
+                        "pr_url": "https://github.com/acme/repo/pull/7",
+                    }
+                }
+            ),
+        },
+    }
+
+    asyncio.run(
+        runtime_service._dispatch_hook_event(
+            conversation_id="incident::fp-auto",
+            thread_id="incident::fp-auto",
+            event=event,
+        )
+    )
+
+    assert calls == {"auto": 1, "feishu": 0}
 
 
 def test_chat_and_history(monkeypatch: Any) -> None:

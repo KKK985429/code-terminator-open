@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -32,7 +33,8 @@ def git_fetch() -> bool:
         return False
 
 
-def git_pull(branch: str = "feature/incident-ingest") -> dict[str, Any]:
+def git_pull(branch: str | None = None) -> dict[str, Any]:
+    branch = branch or _deploy_branch()
     before_sha = _current_sha()
     try:
         result = subprocess.run(
@@ -75,6 +77,28 @@ def _current_sha() -> str:
     try:
         result = subprocess.run(
             ["git", "rev-parse", "HEAD"],
+            cwd=_REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        return result.stdout.strip()
+    except Exception:
+        return ""
+
+
+def _deploy_branch() -> str:
+    configured = os.getenv("CODE_TERMINATOR_DEPLOY_BRANCH", "").strip()
+    if configured:
+        return configured
+    current = _current_branch()
+    return current or "main"
+
+
+def _current_branch() -> str:
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--show-current"],
             cwd=_REPO_ROOT,
             capture_output=True,
             text=True,

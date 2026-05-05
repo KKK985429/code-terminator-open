@@ -94,6 +94,8 @@ export function App() {
   const [error, setError] = useState("");
   const [runtimeSettings, setRuntimeSettings] = useState<RuntimeSettings | null>(null);
   const [githubTokenDraft, setGithubTokenDraft] = useState("");
+  const [autoReviewMergeReloadDraft, setAutoReviewMergeReloadDraft] =
+    useState(false);
   const [savingToken, setSavingToken] = useState(false);
   const [showGithubToken, setShowGithubToken] = useState(false);
   const [tokenStatus, setTokenStatus] = useState("");
@@ -139,6 +141,7 @@ export function App() {
       .then((settings) => {
         setRuntimeSettings(settings);
         setGithubTokenDraft(settings.github_token);
+        setAutoReviewMergeReloadDraft(settings.auto_review_merge_reload);
       })
       .catch((err: Error) => {
         logBackgroundError("fetchRuntimeSettings", err);
@@ -200,8 +203,9 @@ export function App() {
     [input, loading],
   );
   const tokenDirty = runtimeSettings
-    ? githubTokenDraft !== runtimeSettings.github_token
-    : githubTokenDraft.length > 0;
+    ? githubTokenDraft !== runtimeSettings.github_token ||
+      autoReviewMergeReloadDraft !== runtimeSettings.auto_review_merge_reload
+    : githubTokenDraft.length > 0 || autoReviewMergeReloadDraft;
 
   const planItems = planSnapshot?.plan_items ?? [];
   const activityLog = planSnapshot?.activity_log ?? [];
@@ -235,9 +239,13 @@ export function App() {
     setSavingToken(true);
     setTokenStatus("");
     try {
-      const saved = await saveRuntimeSettings(githubTokenDraft);
+      const saved = await saveRuntimeSettings(
+        githubTokenDraft,
+        autoReviewMergeReloadDraft,
+      );
       setRuntimeSettings(saved);
       setGithubTokenDraft(saved.github_token);
+      setAutoReviewMergeReloadDraft(saved.auto_review_merge_reload);
       setTokenStatus(saved.github_token ? "已保存到本地运行时配置" : "已清空本地运行时配置");
     } catch (err) {
       const message = err instanceof Error ? err.message : "保存 token 失败";
@@ -516,6 +524,14 @@ export function App() {
             >
               {savingToken ? "保存中…" : "保存"}
             </button>
+            <label className="auto-review-toggle">
+              <input
+                type="checkbox"
+                checked={autoReviewMergeReloadDraft}
+                onChange={(e) => setAutoReviewMergeReloadDraft(e.target.checked)}
+              />
+              <span>自动 Review / Merge / 热重载</span>
+            </label>
           </div>
           <div className="runtime-settings-hint">
             {tokenStatus ||

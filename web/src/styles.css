@@ -277,6 +277,23 @@ textarea, input { font-family: inherit; }
   display: flex;
   gap: 8px;
   margin-top: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.auto-review-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-sub);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.auto-review-toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
 }
 
 .token-input {

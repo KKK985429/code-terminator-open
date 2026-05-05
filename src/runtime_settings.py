@@ -14,6 +14,7 @@ def now_iso() -> str:
 
 class RuntimeSettings(BaseModel):
     github_token: str = ""
+    auto_review_merge_reload: bool = False
     updated_at: str = Field(default_factory=now_iso)
 
 
@@ -46,9 +47,12 @@ def load_runtime_settings() -> RuntimeSettings:
         return RuntimeSettings()
 
 
-def save_runtime_settings(*, github_token: str) -> RuntimeSettings:
+def save_runtime_settings(
+    *, github_token: str, auto_review_merge_reload: bool = False
+) -> RuntimeSettings:
     settings = RuntimeSettings(
         github_token=github_token.strip(),
+        auto_review_merge_reload=auto_review_merge_reload,
         updated_at=now_iso(),
     )
     runtime_settings_path().write_text(

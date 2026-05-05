@@ -38,11 +38,13 @@ class ChatSendRequest(BaseModel):
 
 class RuntimeSettingsResponse(BaseModel):
     github_token: str = ""
+    auto_review_merge_reload: bool = False
     updated_at: str = Field(default_factory=now_iso)
 
 
 class RuntimeSettingsUpdateRequest(BaseModel):
     github_token: str = ""
+    auto_review_merge_reload: bool = False
 
 
 class PlanItemPayload(BaseModel):
