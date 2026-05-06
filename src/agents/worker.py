@@ -837,7 +837,23 @@ def _extract_json_payload(text: str) -> str:
         lines = stripped.splitlines()
         if len(lines) >= 3 and lines[-1].strip() == "```":
             return "\n".join(lines[1:-1]).strip()
+    fenced = _extract_fenced_json_payload(stripped)
+    if fenced:
+        return fenced
     return stripped
+
+
+def _extract_fenced_json_payload(text: str) -> str:
+    lines = text.splitlines()
+    start: int | None = None
+    for idx, line in enumerate(lines):
+        marker = line.strip().lower()
+        if start is not None and marker == "```":
+            return "\n".join(lines[start:idx]).strip()
+        if marker in {"```json", "```"}:
+            start = idx + 1
+            continue
+    return ""
 
 
 def _string_list(value: Any) -> list[str]:

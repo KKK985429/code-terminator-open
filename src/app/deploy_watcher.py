@@ -63,12 +63,11 @@ async def _handle_approved(entry: dict[str, Any]) -> None:
     deployed_commit = pull_result["after_sha"]
     deployed_at = datetime.now(UTC).isoformat(timespec="seconds")
 
-    # 没有新代码就跳过
+    # 没有新代码也要进入验证窗口:多个 incident 的 PR 可能被同一次 pull 带下来了。
     if not pull_result["changed"]:
         logger.info("deploy_watcher.no_change fingerprint=%s", fingerprint)
-        upsert(
-            fingerprint,
-            status="deployed",
+        await _mark_deployed_and_wait_for_resolution(
+            fingerprint=fingerprint,
             deployed_commit=deployed_commit,
             deployed_at=deployed_at,
         )
@@ -97,6 +96,19 @@ async def _handle_approved(entry: dict[str, Any]) -> None:
         return
 
     # 第四步：记录部署完成，进入验证窗口
+    await _mark_deployed_and_wait_for_resolution(
+        fingerprint=fingerprint,
+        deployed_commit=deployed_commit,
+        deployed_at=deployed_at,
+    )
+
+
+async def _mark_deployed_and_wait_for_resolution(
+    *,
+    fingerprint: str,
+    deployed_commit: str,
+    deployed_at: str,
+) -> None:
     verify_until = time.time() + _VERIFY_WINDOW_SECONDS
     upsert(
         fingerprint,

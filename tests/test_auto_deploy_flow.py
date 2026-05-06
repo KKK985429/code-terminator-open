@@ -98,6 +98,49 @@ def test_deploy_watcher_handles_approved_incident(
     assert calls["pull_branch"] == "main"
 
 
+def test_deploy_watcher_resolves_when_pull_has_no_change(
+    monkeypatch: Any, tmp_path: Any
+) -> None:
+    ecommerce_root_path = tmp_path / "ecommerce-platform-demo"
+    monkeypatch.setenv("CODE_TERMINATOR_ECOMMERCE_ROOT", str(ecommerce_root_path))
+    monkeypatch.setenv("CODE_TERMINATOR_ECOMMERCE_DEPLOY_BRANCH", "main")
+    monkeypatch.setattr(
+        incident_registry,
+        "_REGISTRY_FILE",
+        tmp_path / "incidents" / "registry.json",
+    )
+    monkeypatch.setattr(deploy_watcher, "_VERIFY_WINDOW_SECONDS", 0)
+
+    def fake_fetch(*, repo_root: Any) -> bool:
+        del repo_root
+        return True
+
+    def fake_pull(*, branch: str, repo_root: Any) -> dict[str, Any]:
+        del branch, repo_root
+        return {
+            "ok": True,
+            "before_sha": "def456",
+            "after_sha": "def456",
+            "changed": False,
+            "stdout": "",
+            "stderr": "",
+        }
+
+    monkeypatch.setattr("src.app.deploy_watcher.git_fetch", fake_fetch)
+    monkeypatch.setattr("src.app.deploy_watcher.git_pull", fake_pull)
+    monkeypatch.setattr("src.app.deploy_watcher.asyncio.sleep", _fast_sleep)
+
+    incident_registry.upsert("fp-no-change", status="approved")
+
+    asyncio.run(deploy_watcher._handle_approved({"fingerprint": "fp-no-change"}))
+
+    entry = incident_registry.get("fp-no-change")
+    assert entry is not None
+    assert entry["status"] == "resolved"
+    assert entry["deployed_commit"] == "def456"
+    assert "verify_window_until" in entry
+
+
 async def _ok_health_check() -> bool:
     return True
 

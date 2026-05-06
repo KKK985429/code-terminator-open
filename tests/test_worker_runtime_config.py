@@ -55,6 +55,31 @@ def test_parse_worker_json_output_accepts_fenced_json() -> None:
     }
 
 
+def test_parse_worker_json_output_accepts_prefaced_fenced_json() -> None:
+    payload = _parse_worker_json_output(
+        """The work is complete. Here is the summary JSON:
+
+```json
+{
+  "summary": "ok",
+  "verification": ["check"],
+  "risks": [],
+  "changed_files": ["worker_smoke.txt"],
+  "workflow_updates": {
+    "branch_name": "fix/demo",
+    "pr_url": "https://github.com/acme/repo/pull/1"
+  }
+}
+```"""
+    )
+
+    assert payload["summary"] == "ok"
+    assert payload["workflow_updates"] == {
+        "branch_name": "fix/demo",
+        "pr_url": "https://github.com/acme/repo/pull/1",
+    }
+
+
 def test_worker_config_uses_local_defaults(monkeypatch: object) -> None:
     monkeypatch.delenv("CODEX_WORKER_DOCKER_IMAGE", raising=False)
     monkeypatch.delenv("KIMI_WORKER_DOCKER_IMAGE", raising=False)

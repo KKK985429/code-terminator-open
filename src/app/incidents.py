@@ -17,8 +17,6 @@ _OFFSET_FILE = Path(
 ) / "log_offset.txt"
 
 
-# 只处理这两类事件
-_INGEST_EVENTS = {"service_exception"}
 _INGEST_STATUS_THRESHOLD = 500
 
 
@@ -57,16 +55,25 @@ def tail_new_records() -> Generator[dict[str, Any], None, None]:
             except json.JSONDecodeError:
                 continue
 
-            event = str(record.get("event", ""))
-            status_code = int(record.get("status_code", 0))
-
-            # 只处理 service_exception
-            # 或者 service_request 且状态码 >= 500
-            if event == "service_exception":
-                if record.get("traceback"):  # 必须有 traceback
-                    yield record
-            elif event == "service_request" and status_code >= _INGEST_STATUS_THRESHOLD:
-                if record.get("traceback"):  # service_request 也必须有 traceback 才处理
-                    yield record
+            if _is_ingestable_exception(record):
+                yield record
 
     _save_offset(new_offset)
+
+
+def _is_ingestable_exception(record: dict[str, Any]) -> bool:
+    if not str(record.get("traceback", "")).strip():
+        return False
+
+    event = str(record.get("event", "")).strip()
+    if event == "service_exception":
+        return True
+
+    try:
+        status_code = int(record.get("status_code", 0) or 0)
+    except (TypeError, ValueError):
+        status_code = 0
+    if status_code >= _INGEST_STATUS_THRESHOLD:
+        return True
+
+    return str(record.get("level", "")).strip().lower() == "error"
