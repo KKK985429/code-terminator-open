@@ -1,59 +1,251 @@
-# code-terminator
+<div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)](#)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Orchestrated-0E9F6E)](#)
-[![FastAPI](https://img.shields.io/badge/FastAPI-API%20%2B%20SSE-009688?logo=fastapi&logoColor=white)](#)
-[![React](https://img.shields.io/badge/React-Vite%20Console-61DAFB?logo=react&logoColor=222)](#)
-[![Docker Worker](https://img.shields.io/badge/Docker-Codex%20Worker-2496ED?logo=docker&logoColor=white)](#)
-[![License](https://img.shields.io/badge/License-MIT-2EA043)](#)
+<img src="https://capsule-render.vercel.app/api?type=waving&height=230&color=0:00E5FF,35:7C3AED,70:FF2D75,100:FFD166&text=CODE%20TERMINATOR&fontAlign=50&fontAlignY=38&fontSize=56&fontColor=FFFFFF&desc=Autonomous%20Multi-Agent%20Software%20Runtime&descAlign=50&descAlignY=60&animation=twinkling" alt="Code Terminator hero" width="100%" />
 
-Language / 语言: [English](./README.en.md) | [简体中文](./README.zh-CN.md)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=24&duration=2200&pause=700&color=00E5FF&center=true&vCenter=true&width=940&lines=Leader+Plans+%E2%9A%A1+Workers+Patch+%E2%9A%A1+Reviewer+Guards;Incidents+Wake+The+System+%E2%9A%A1+Agents+Fix+The+Repo;FastAPI+%2B+SSE+%2B+React+%2B+Docker+Codex+Workers)](https://git.io/typing-svg)
 
-> 一个不只会聊天的多智能体运行时骨架。
-> 现在它已经具备了 CLI、FastAPI、SSE 流式前端、可恢复计划状态、Docker 中的真实 Codex Worker、以及本地持久化运行时设置。
+<p>
+  <a href="./README.en.md">English</a>
+  ·
+  <a href="./README.zh-CN.md">简体中文</a>
+  ·
+  <a href="./docs/api.md">API Docs</a>
+  ·
+  <a href="./CONTRIBUTING.md">Contributing</a>
+</p>
 
-## Overview
+<p>
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/LangGraph-Agentic_Runtime-1C7ED6?style=for-the-badge&logo=graph&logoColor=white" alt="LangGraph" />
+  <img src="https://img.shields.io/badge/FastAPI-SSE_Runtime-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/React-Vite_Console-61DAFB?style=for-the-badge&logo=react&logoColor=20232A" alt="React" />
+  <img src="https://img.shields.io/badge/Docker-Codex_Worker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/License-MIT-2EA043?style=for-the-badge&logo=open-source-initiative&logoColor=white" alt="MIT" />
+</p>
 
-`code-terminator` 是一个基于 LangGraph 的多智能体实验场，当前重点已经不再只是“最小骨架”，而是围绕下面这条真实链路打通：
+<p>
+  <img src="https://img.shields.io/badge/CLI-ready-00E5FF?style=flat-square" alt="CLI ready" />
+  <img src="https://img.shields.io/badge/Web_Console-live-FF2D75?style=flat-square" alt="Web console" />
+  <img src="https://img.shields.io/badge/Checkpoint-resumable-7C3AED?style=flat-square" alt="Checkpoint" />
+  <img src="https://img.shields.io/badge/Memory-Chroma-FFD166?style=flat-square" alt="Memory" />
+  <img src="https://img.shields.io/badge/GitHub_PR-auto_flow-2EA043?style=flat-square&logo=github" alt="GitHub PR" />
+  <img src="https://img.shields.io/badge/Incident_Auto_Dispatch-on-FF6B35?style=flat-square" alt="Incident dispatch" />
+</p>
 
-- `leader` 负责规划、拆解任务、维护计划项和 React trace
-- `worker` / `reviewer` 负责并发执行与反馈
-- Web 控制台通过 FastAPI + SSE 实时展示对话、计划和活动日志
-- Docker Worker 可以在隔离工作区里调用 Codex 处理真实仓库任务
-- Memory、hook event、runtime settings 都会落盘，支持恢复和追踪
+<h3>把“聊天机器人”升级成会规划、会派工、会修复、会复盘的软件自治系统。</h3>
+
+</div>
+
+---
+
+## 🚀 项目定位
+
+`code-terminator` 是一个面向真实软件工程任务的多智能体运行时。它不是只会回答问题的玩具项目，而是围绕“发现问题 -> 规划任务 -> 派发 Worker -> 回传结果 -> Reviewer 审查 -> 可恢复运行”这条链路搭建的工程系统。
+
+它把 **LangGraph 编排**、**FastAPI 流式服务**、**React 控制台**、**Docker 隔离 Worker**、**长期记忆**、**事件唤醒** 和 **GitHub 自动化协作** 串在一起，让 AI Agent 更像一个可以接入研发流程的自动化队友。
+
+---
+
+## ✨ 高能特性墙
+
+| 模块 | 能力 | 工程价值 |
+| --- | --- | --- |
+| 🧠 Leader Agent | 拆解任务、维护计划、调度工具 | 从单轮问答升级为可推进的任务状态机 |
+| 🛠️ Worker Agent | 执行具体代码任务 | 将复杂需求拆给独立执行单元处理 |
+| 🛡️ Reviewer Agent | 反馈、审查、守住质量 | 让多智能体形成闭环，而不是盲目生成 |
+| 🌊 SSE Streaming | Web 端实时流式输出 | 用户能看到任务推进过程、事件和计划变化 |
+| 🧩 Plan State Machine | 计划项 pending / running / done | 支持可观测、可恢复、可追踪的任务运行 |
+| 🐳 Docker Codex Worker | 容器化执行任务 | 隔离执行真实仓库任务，减少污染本地环境 |
+| 🧬 Memory + Checkpoint | SQLite checkpoint + Chroma memory | 支持断点恢复、长期上下文和历史复用 |
+| 🔔 Incident Wakeup | 事故事件触发自动修复链路 | 从日志/异常到自动派工修复，接近线上运维场景 |
+| 🔀 GitHub Flow | Token 注入、PR fallback、自动化协作 | 连接真实研发协作流程 |
+| ⚙️ Runtime Settings | UI/API 持久化运行时配置 | 可动态保存运行参数，不必每次重启重配 |
+
+---
+
+## 🌌 核心能力全景
+
+<table>
+  <tr>
+    <td width="50%">
+      <h3>🧠 Agentic Runtime</h3>
+      <p>Leader 负责理解目标、拆解任务、维护计划、调用工具和吸收事件；Worker 负责执行任务；Reviewer 负责审查输出。整个运行时不是简单 prompt chaining，而是一个可恢复的图式状态系统。</p>
+    </td>
+    <td width="50%">
+      <h3>🌊 Observable Workflow</h3>
+      <p>FastAPI + SSE 将对话、计划、事件、日志和结果流式推到 Web 控制台。每次任务推进都有状态可见，适合接入研发控制台、任务看板或自动化平台。</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🐳 Isolated Code Worker</h3>
+      <p>Worker 任务会被打包成 job bundle，并可在 Docker 中执行。输入、输出、stdout、stderr、结构化结果都会落盘，方便审计、复现和问题定位。</p>
+    </td>
+    <td width="50%">
+      <h3>🔥 Incident-Driven Repair</h3>
+      <p>系统支持 incident_new / incident_regressed 事件。异常进入 hook bus 后，Leader 可以生成修复计划并派发 Worker，让系统具备事件驱动的自动修复雏形。</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <h3>🧬 Memory & Resume</h3>
+      <p>SQLite checkpoint 保存运行状态，Chroma 承载长期记忆，runtime-state 保存会话、计划和设置。长任务可以中断后恢复，不必从零开始。</p>
+    </td>
+    <td width="50%">
+      <h3>🔀 GitHub-Native Automation</h3>
+      <p>运行时可保存 GitHub Token，并注入到 Worker 的 GITHUB_TOKEN / GH_TOKEN。后续可以连接分支、提交、PR、审查和自动合并等真实协作链路。</p>
+    </td>
+  </tr>
+</table>
+
+---
+
+## 🏗️ 系统架构
 
 ```mermaid
-flowchart LR
-    U[User / CLI / Web] --> API[FastAPI RuntimeService]
-    API --> LG[LangGraph Runtime]
-    LG --> LEADER[Leader]
-    LEADER --> PLAN[Plan State Machine]
-    LEADER --> WTOOL[call_code_worker_tool]
-    LEADER --> REVIEW[Reviewer]
-    WTOOL --> DKR[Docker Codex Worker]
-    API --> SSE[Streaming SSE]
-    API --> HOOK[Hook Event Bus]
-    LG --> MEM[Checkpoint + Chroma Memory]
-    API --> CFG[Runtime Settings]
+flowchart TB
+    USER["👤 User / Judge / Developer"] --> WEB["🎛️ React + Vite Console"]
+    USER --> CLI["⌨️ CLI"]
+
+    WEB --> API["⚡ FastAPI Runtime Service"]
+    CLI --> GRAPH["🧠 LangGraph Runtime"]
+    API --> GRAPH
+
+    GRAPH --> LEADER["👑 Leader Agent"]
+    LEADER --> PLAN["📋 Plan State Machine"]
+    LEADER --> TOOLS["🧰 Tool Registry"]
+    LEADER --> REVIEWER["🛡️ Reviewer Agent"]
+
+    TOOLS --> WORKER_TOOL["🚀 call_code_worker_tool"]
+    WORKER_TOOL --> DOCKER["🐳 Docker Codex Worker"]
+    DOCKER --> REPO["📦 Target Repository"]
+
+    API --> SSE["🌊 SSE Event Stream"]
+    API --> SETTINGS["⚙️ Runtime Settings"]
+    API --> HOOK["🔔 Hook Event Bus"]
+
+    GRAPH --> CHECKPOINT["💾 SQLite Checkpoint"]
+    GRAPH --> MEMORY["🧬 Chroma Long-Term Memory"]
+
+    INCIDENT["🔥 Incident / Regression Event"] --> HOOK
+    HOOK --> GRAPH
+
+    DOCKER --> RESULT["📨 Worker Result Bundle"]
+    RESULT --> HOOK
 ```
 
-## What's New
+---
 
-相比早期版本，仓库里现在已经新增了这些值得写进 README 的内容：
+## 🧪 一句话运行路线
 
-- Web 控制台：React + Vite，支持会话列表、流式回复、计划面板、活动日志、GitHub Token 设置
-- FastAPI Runtime：支持 `/api/chat/send`、`/api/chat/send/stream`、历史记录、计划快照、运行时设置
-- Hook 持久化总线：后台线程可通过磁盘事件把子代理结果安全回传给 API runtime
-- Docker Worker 执行链路：Leader 可以把任务打包成 job bundle，在独立容器中执行 Codex
-- 运行时设置持久化：支持从 UI/API 保存 `github_token`，Worker 会自动注入到 `GITHUB_TOKEN` / `GH_TOKEN`
-- 可恢复运行时：支持 `thread_id`、checkpoint 恢复、事件注入
-- Python bootstrap：`uv` 管理依赖，`src/datagov/` 作为独立可导入包保留
-- 环境烟雾验证：`ENV_STATUS.md` 和 `docs/smoke/` 记录了环境检查结果
-- 附带参考目录：`cliagent/`、`opms-collab/` 作为实验/集成目录已纳入仓库
+> 打开 Web 控制台，输入一个工程任务；Leader 生成计划，Worker 被派发到 Docker 中执行，过程通过 SSE 实时显示，任务状态落盘，结果回传后 Reviewer 进行审查；如果系统收到 incident 事件，还能自动唤醒修复链路。
 
-## Quick Start
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant W as Web Console
+    participant A as FastAPI
+    participant G as LangGraph
+    participant L as Leader
+    participant D as Docker Worker
+    participant R as Reviewer
+    participant M as Memory
+
+    U->>W: Submit task
+    W->>A: POST /api/chat/send/stream
+    A->>G: Start runtime graph
+    G->>L: Plan and dispatch
+    L->>D: Run isolated code task
+    D-->>A: Hook event result
+    A-->>W: Stream activity by SSE
+    L->>R: Review worker output
+    G->>M: Save checkpoint + memory
+    W-->>U: Final answer + visible plan
+```
+
+---
+
+## 🧰 技术栈
+
+| Layer | Stack |
+| --- | --- |
+| Agent Runtime | LangGraph, LangChain, OpenAI-compatible APIs |
+| Backend | FastAPI, Pydantic, Uvicorn, SSE |
+| Frontend | React, Vite, TypeScript |
+| Worker | Docker, Codex-compatible CLI worker, isolated job bundle |
+| Memory | SQLite checkpoint, Chroma long-term memory |
+| Automation | GitHub token injection, hook event bus, runtime settings |
+| Quality | pytest, black, isort, mypy |
+
+---
+
+## 🧱 运行时组件
+
+### Leader
+
+Leader 是系统的调度核心，主要负责：
+
+- 将用户目标转成可执行计划
+- 维护 `PlanItem` 状态
+- 读取 conversation turns 和 conversation summary
+- 调用工具注册表里的工具
+- 根据 hook event 更新任务状态
+- 针对 incident 事件生成修复任务
+- 将 Worker / Reviewer 的输出合并成最终结果
+
+### Worker
+
+Worker 面向具体执行任务，可以处理：
+
+- 代码修改任务
+- 文件分析任务
+- 测试修复任务
+- 回归验证任务
+- 目标仓库内的局部实现
+
+当启用 Docker Worker 时，任务会被写入 `.code-terminator/worker-jobs/`，并在隔离容器里执行。
+
+### Reviewer
+
+Reviewer 负责从工程质量角度检查结果，包括：
+
+- 是否满足原始目标
+- 是否有明显回归风险
+- 是否缺少验证
+- 是否需要继续派发任务
+- 是否可以生成最终回复
+
+### Hook Bus
+
+Hook bus 是后端和异步 Worker 之间的事件桥。它通过磁盘目录传递事件，避免长任务和 API 请求强绑定。
+
+典型事件：
+
+| Event | 说明 |
+| --- | --- |
+| `subagent_result` | Worker / Reviewer 返回结果 |
+| `incident_new` | 新异常被发现 |
+| `incident_regressed` | 已修复问题再次出现 |
+
+### Runtime Service
+
+FastAPI Runtime Service 封装了：
+
+- 会话创建
+- 流式对话
+- 历史读取
+- 计划快照读取
+- runtime settings 持久化
+- hook event pump
+- agent status 查询
+
+---
+
+## ⚡ 快速启动
 
 ### 1. 准备环境
+
+需要：
 
 - Python `3.11+`
 - `uv`
@@ -70,8 +262,6 @@ npm --prefix web install
 
 ### 3. 配置模型访问
 
-推荐先准备一个 `.env`，至少补齐 LLM 和 embedding 所需变量：
-
 ```bash
 export OPENAI_API_KEY="your-api-key"
 export OPENAI_BASE_URL="https://your-openai-compatible-endpoint"
@@ -79,330 +269,191 @@ export DEFAULT_MODEL="gpt-4o-mini"
 export EMBEDDING_MODEL="text-embedding-3-small"
 ```
 
-如果你只跑本地 UI 壳子、不触发真实模型调用，这些变量可以稍后再配。
+### 4. 启动全栈开发环境
 
-## Run Modes
+```bash
+npm run dev
+```
 
-### CLI
+默认地址：
+
+| 服务 | 地址 |
+| --- | --- |
+| Web Console | `http://127.0.0.1:5174` |
+| FastAPI | `http://127.0.0.1:18000` |
+| Swagger UI | `http://127.0.0.1:18000/docs` |
+
+---
+
+## 🖥️ 运行方式
+
+### CLI 模式
 
 ```bash
 uv run python -m src.main --task "Build a TODO app backend"
 ```
 
-带线程与恢复：
+带线程 ID，方便后续恢复：
 
 ```bash
 uv run python -m src.main \
   --task "Build a TODO app backend" \
   --thread-id demo-001
+```
 
+恢复一次历史运行：
+
+```bash
 uv run python -m src.main \
   --task "resume" \
   --thread-id demo-001 \
   --resume
 ```
 
-注入子代理结果事件：
-
-```bash
-uv run python -m src.main \
-  --task "resume" \
-  --thread-id demo-001 \
-  --resume \
-  --event-type subagent_result \
-  --event-task-id task-abc \
-  --event-status completed \
-  --event-role worker \
-  --event-details "implementation finished"
-```
-
-### API
+### API 模式
 
 ```bash
 uv run uvicorn src.api.app:app --reload --host 127.0.0.1 --port 18000
 ```
 
-启动后可访问：
+常用接口：
 
-- API: `http://127.0.0.1:18000/api`
-- Swagger UI: `http://127.0.0.1:18000/docs`
+| Endpoint | 说明 |
+| --- | --- |
+| `GET /api/health` | 健康检查 |
+| `GET /api/agents/status` | Agent 状态 |
+| `POST /api/chat/send` | 普通对话任务 |
+| `POST /api/chat/send/stream` | SSE 流式任务 |
+| `GET /api/chat/history` | 历史记录 |
+| `GET /api/conversations/{conversation_id}` | 会话详情 |
+| `GET /api/conversations/{conversation_id}/plan` | 计划快照 |
+| `GET /api/settings/runtime` | 读取运行时配置 |
+| `PUT /api/settings/runtime` | 保存运行时配置 |
 
-### Full Stack Dev
+---
+
+## 🎛️ Web Console
+
+Web 控制台不仅是一个聊天框，它更像一个轻量的 Agent 运行面板：
+
+- 左侧可以维护会话列表
+- 中间展示流式对话结果
+- 右侧展示计划项和任务状态
+- Activity Log 记录运行事件
+- Settings 可以保存 GitHub Token
+- 后端通过 SSE 推送任务进度
+- 页面刷新后仍可读取历史会话和计划快照
+
+推荐本地开发时直接运行：
 
 ```bash
 npm run dev
 ```
 
-这个命令会同时启动：
+`web/vite.config.ts` 会将 `/api` 代理到后端端口，默认后端端口是 `18000`。
 
-- 前端 Vite：`http://127.0.0.1:5174`
-- 后端 FastAPI：`http://127.0.0.1:18000`
+---
 
-`web/vite.config.ts` 会把 `/api` 代理到 `BACKEND_PORT`，默认就是 `18000`。
+## 🐳 Docker Worker
 
-## Real Docker Worker
-
-如果你希望 `leader` 真正把任务发给 Docker 中的 CLI Worker，建议先准备一个稳定的 Worker 镜像：
+如果要让 Leader 真正把任务派发给容器里的 Worker：
 
 ```bash
 docker build -t code-terminator/worker-codex -f docker/worker-codex/Dockerfile .
 export CODEX_WORKER_DOCKER_IMAGE="code-terminator/worker-codex"
 ```
 
-如果你没有系统级 Docker daemon，也可以在工作区里启动独立 daemon：
-
-```bash
-./scripts/start_workspace_docker.sh
-export DOCKER_HOST="unix://$PWD/.docker/docker.sock"
-```
-
-Worker 执行时会：
-
-1. 在 `.code-terminator/worker-jobs/` 下生成任务 bundle
-2. 写入 `leader-task.md` 和 `leader-task.json`
-3. 启动 Docker 容器
-4. 把结果、stdout、stderr、内部日志都落盘
-
-### Kimi Local Integration Case
-
-仓库现在附带一个真实的本地集成用例，专门验证：
-
-- `call_code_worker` 真实异步链路
-- Docker 内启动 Kimi
-- 在隔离工作区写本地文件
-- hook 回传 `structured_output`
-- 全程不触发 GitHub 或远端仓库操作
-
-样例配置文件：
-
-```bash
-configs/kimi-local-integration.env.example
-```
-
-手动运行：
-
-```bash
-set -a
-source configs/kimi-local-integration.env.example
-export OPENAI_BASE_URL="https://your-openai-compatible-endpoint"
-export OPENAI_API_KEY="your-api-key"
-set +a
-
-uv run --python python3.12 python scripts/run_kimi_local_integration.py
-```
-
-如果你要把它作为真实 pytest 用例运行，需要显式打开：
-
-```bash
-RUN_KIMI_LOCAL_INTEGRATION=1 \
-OPENAI_BASE_URL="https://your-openai-compatible-endpoint" \
-OPENAI_API_KEY="your-api-key" \
-uv run --python python3.12 pytest -q tests/test_kimi_local_integration.py
-```
-
-详细说明见：
+Worker 执行时会生成 job bundle：
 
 ```text
-docs/kimi-local-integration.md
+.code-terminator/
+  worker-jobs/
+    <job-id>/
+      leader-task.md
+      leader-task.json
+      stdout.log
+      stderr.log
+      result.json
 ```
 
-辅助文件：
+这个设计的好处是：每一次 Agent 执行都有可追踪证据，方便审计、复盘、回放和定位失败原因。
 
-```text
-docs/kimi-local-integration-checklist.md
-docs/kimi-local-integration-troubleshooting.md
-scripts/run_kimi_local_integration.sh
-configs/kimi-local-integration.dashscope.env.example
-```
-
-## Configuration
-
-### Core Runtime
-
-| 变量 | 默认值 | 说明 |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | 空 | LLM / embedding 使用的 API Key |
-| `OPENAI_BASE_URL` | 空 | OpenAI 兼容接口地址 |
-| `DEFAULT_MODEL` | `gpt-4o-mini` | 默认对话模型 |
-| `EMBEDDING_MODEL` | `text-embedding-3-small` | 长期记忆 embedding 模型 |
-| `MEMORY_DATA_DIR` | `.memory` | memory 根目录 |
-| `CHECKPOINT_DB_NAME` | `checkpoints.sqlite` | checkpoint SQLite 文件名 |
-| `CHROMA_DIR_NAME` | `chroma` | Chroma 子目录名 |
-
-### API / Runtime State
-
-| 变量 | 默认值 | 说明 |
-| --- | --- | --- |
-| `CODE_TERMINATOR_API_STATE_ROOT` | `.code-terminator/runtime-state` | API 运行时状态根目录 |
-| `CODE_TERMINATOR_HOOK_ROOT` | `.code-terminator/hook-events` | hook 事件目录 |
-| `CODE_TERMINATOR_HOOK_STALE_SECONDS` | `30` | processing 事件回收阈值，最小 5 秒 |
-
-运行时设置文件默认位置：
-
-```text
-.code-terminator/runtime-state/settings/runtime.json
-```
-
-当前持久化字段只有一个：
-
-- `github_token`
-
-它可以从 Web UI 或 `PUT /api/settings/runtime` 写入，随后会自动注入 Worker 的 `GITHUB_TOKEN` / `GH_TOKEN`。
-
-### Leader Tuning
-
-| 变量 | 默认值 | 说明 |
-| --- | --- | --- |
-| `LEADER_MAX_STEPS` | `8` | Leader 最大决策步数 |
-| `LEADER_TRACE_STEPS` | `24` | React trace 保留步数 |
-| `LEADER_ACTIVITY_LOG_LIMIT` | `60` | 活动日志最大保留条数 |
-| `LEADER_LLM_TIMEOUT_SECONDS` | `120` | Leader 模型调用超时 |
-
-### Worker Runtime
-
-常用配置：
+### Worker 关键配置
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `CODEX_WORKER_DOCKER_IMAGE` | `mcr.microsoft.com/playwright:v1.58.2-noble` | Worker 镜像 |
 | `CODEX_WORKER_TIMEOUT_SECONDS` | `1800` | 单次 Worker 超时 |
 | `CODEX_WORKER_CONTAINER_WORKDIR` | `/workspace` | 容器内工作目录 |
-| `CODEX_WORKER_CODEX_BIN` | `codex` | 容器内 Codex 命令 |
+| `CODEX_WORKER_CODEX_BIN` | `codex` | 容器内执行命令 |
 | `CODEX_WORKER_MODEL` | 空 | 指定 Worker 使用的模型 |
 | `CODEX_WORKER_JOB_ROOT` | `.code-terminator/worker-jobs` | Worker job bundle 根目录 |
-| `CODEX_WORKER_HOST_NODE_ROOT` | 自动探测 | 挂载宿主机 Node/Codex 根目录 |
-| `CODEX_WORKER_CONTAINER_NODE_ROOT` | `/opt/host-node` | 容器内挂载 Node 根目录 |
-| `CODEX_WORKER_DOCKER_ARGS` | 空 | 额外透传给 `docker run` 的参数 |
+| `CODEX_WORKER_DOCKER_ARGS` | 空 | 额外传给 `docker run` 的参数 |
 
-Kimi 兼容别名：
+### Kimi / OpenAI-Compatible Worker
 
-| 变量 | 默认值 | 说明 |
-| --- | --- | --- |
-| `KIMI_WORKER_DOCKER_IMAGE` | 空 | 优先于 `CODEX_WORKER_DOCKER_IMAGE` |
-| `KIMI_WORKER_BIN` | `kimi` | 优先于 `CODEX_WORKER_CODEX_BIN` |
-
-代理与网络相关的高级项：
-
-- `CODEX_WORKER_PASSTHROUGH_PROXY`
-- `CODEX_WORKER_GIT_PROXY`
-- `CODEX_WORKER_GIT_HTTP_PROXY`
-- `CODEX_WORKER_GIT_HTTPS_PROXY`
-- `CODEX_WORKER_TOOL_PROXY`
-- `CODEX_WORKER_TOOL_HTTP_PROXY`
-- `CODEX_WORKER_TOOL_HTTPS_PROXY`
-- `CODEX_WORKER_TOOL_ALL_PROXY`
-- `CODEX_WORKER_TOOL_NO_PROXY`
-
-当前实现会把 Git 代理和通用工具代理分开处理；若代理指向 `127.0.0.1` / `localhost`，Linux 下会自动切到 `--network host` 或改写为 `host.docker.internal`。
-
-### Logging
-
-| 变量 | 默认值 | 说明 |
-| --- | --- | --- |
-| `APP_LOG_LEVEL` | `INFO` | 日志等级 |
-| `APP_LOG_FILE` | `1` | 是否写入文件日志 |
-
-日志文件默认写到：
+项目也保留了 Kimi 本地集成相关配置，适合验证 OpenAI-compatible endpoint、容器执行和 hook 回传链路：
 
 ```text
-artifacts/logs/<run_tag>.log
+configs/kimi-local-integration.env.example
+configs/kimi-local-integration.dashscope.env.example
+docs/kimi-local-integration.md
+docs/kimi-local-integration-checklist.md
+docs/kimi-local-integration-troubleshooting.md
 ```
 
-## Web Console
-
-当前前端不只是一个聊天框，还包括：
-
-- 会话列表和历史恢复
-- SSE 流式消息展示
-- 计划项面板
-- Activity Log 面板
-- GitHub Token 保存和本地持久化
-
-相关接口：
-
-- `GET /api/health`
-- `GET /api/agents/status`
-- `POST /api/chat/send`
-- `POST /api/chat/send/stream`
-- `GET /api/chat/history`
-- `GET /api/conversations/{conversation_id}`
-- `GET /api/conversations/{conversation_id}/plan`
-- `GET /api/settings/runtime`
-- `PUT /api/settings/runtime`
-
-## Useful Scripts
+运行脚本：
 
 ```bash
-# OpenAI 兼容接口连通性检查
-uv run python scripts/check_connectivity.py
-
-# 调用 Anthropic 兼容接口
-uv run python scripts/call_anthropic_api.py
-
-# 20 条真实任务顺序回归
-uv run python scripts/run_20_queries_real.py --run-tag local-real
-
-# 20 条任务并发回归
-uv run python scripts/run_20_queries_concurrent.py --run-tag local-fast
+uv run --python python3.12 python scripts/run_kimi_local_integration.py
 ```
 
-## Verification
+---
 
-基础安装与 bootstrap smoke：
+## 🔥 Incident Auto Dispatch
 
-```bash
-uv run black --check src/datagov tests/bootstrap
-uv run isort --check-only src/datagov tests/bootstrap
-uv run mypy --strict src
-uv run pytest
+项目内置了 incident / regression 事件链路。系统收到异常事件后，可以：
+
+1. 生成 incident fingerprint
+2. 判断是新问题还是回归问题
+3. 创建或更新计划项
+4. 自动派发 Worker 修复
+5. 通过 hook 事件回传结果
+6. 让 Leader / Reviewer 继续处理
+
+这让项目从“被动问答”变成“事件驱动的软件修复系统”。
+
+### Incident Payload 关注字段
+
+| 字段 | 说明 |
+| --- | --- |
+| `fingerprint` | 异常指纹，用于去重和识别回归 |
+| `service` | 出问题的服务名 |
+| `exception_type` | 异常类型 |
+| `traceback` | 完整堆栈 |
+| `trace_id` | 请求链路追踪 ID |
+| `path` | 请求路径 |
+| `method` | 请求方法 |
+| `error_message` | 错误信息 |
+| `occurrence_count` | 出现次数 |
+
+### Incident 修复闭环
+
+```mermaid
+flowchart LR
+    LOG["Service Log / Error"] --> FP["Fingerprint"]
+    FP --> REG["Incident Registry"]
+    REG --> EVENT["Hook Event"]
+    EVENT --> LEADER["Leader Plan"]
+    LEADER --> WORKER["Worker Fix"]
+    WORKER --> RESULT["Result Bundle"]
+    RESULT --> REVIEW["Reviewer Check"]
+    REVIEW --> DONE["Plan Updated"]
 ```
 
-如果你要显式跑当前主项目测试，而不只依赖 `pyproject.toml` 里的默认 smoke 范围，建议直接指定路径：
+---
 
-```bash
-uv run pytest tests/
-```
-
-针对新增运行时能力，优先关注这些测试：
-
-```bash
-uv run pytest \
-  tests/test_api_integration.py \
-  tests/test_hook_pump.py \
-  tests/test_main_runtime.py \
-  tests/test_worker_runtime_config.py \
-  tests/test_list_plan_tool.py
-```
-
-## Project Layout
-
-```text
-src/
-  agents/              # leader / worker / reviewer
-  api/                 # FastAPI routes, models, runtime service
-  app/                 # graph, state, hook bus, collaboration, plan state machine
-  datagov/             # bootstrap package
-  memory/              # checkpoint + long-term memory
-  prompts/             # role templates
-  skills/              # role-scoped skills
-  tools/               # tool registry + worker dispatch tools
-web/                   # React + Vite 控制台
-docker/worker-codex/   # Worker Dockerfile
-scripts/               # dev / smoke / worker / regression scripts
-docs/                  # API / logging / smoke evidence
-cliagent/              # 额外 CLI agent 相关目录
-opms-collab/           # 协作实验目录
-```
-
-## Related Docs
-
-- [API Reference](./docs/api.md)
-- [Logging Guide](./docs/logging.md)
-- [Environment Status](./ENV_STATUS.md)
-- [Contributing](./CONTRIBUTING.md)
-
-<details>
-<summary>Storage Cheatsheet</summary>
+## 🧠 Memory & Recovery
 
 ```text
 .memory/
@@ -420,4 +471,334 @@ opms-collab/           # 协作实验目录
   worker-jobs/
 ```
 
-</details>
+支持能力：
+
+- 会话历史持久化
+- 计划快照持久化
+- checkpoint 恢复
+- hook event 落盘
+- GitHub token 等运行时配置保存
+- Chroma 长期记忆
+
+---
+
+## ⚙️ 配置速查
+
+### Core Runtime
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | 空 | LLM / embedding 使用的 API Key |
+| `OPENAI_BASE_URL` | 空 | OpenAI-compatible endpoint |
+| `DEFAULT_MODEL` | `gpt-4o-mini` | 默认对话模型 |
+| `EMBEDDING_MODEL` | `text-embedding-3-small` | 长期记忆 embedding 模型 |
+| `MEMORY_DATA_DIR` | `.memory` | memory 根目录 |
+| `CHECKPOINT_DB_NAME` | `checkpoints.sqlite` | checkpoint SQLite 文件名 |
+| `CHROMA_DIR_NAME` | `chroma` | Chroma 子目录名 |
+
+### API / Runtime State
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `CODE_TERMINATOR_API_STATE_ROOT` | `.code-terminator/runtime-state` | API 运行时状态根目录 |
+| `CODE_TERMINATOR_HOOK_ROOT` | `.code-terminator/hook-events` | hook 事件目录 |
+| `CODE_TERMINATOR_HOOK_STALE_SECONDS` | `30` | processing 事件回收阈值，最小 5 秒 |
+
+### Leader Tuning
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `LEADER_MAX_STEPS` | `8` | Leader 最大决策步数 |
+| `LEADER_TRACE_STEPS` | `24` | React trace 保留步数 |
+| `LEADER_ACTIVITY_LOG_LIMIT` | `60` | 活动日志最大保留条数 |
+| `LEADER_LLM_TIMEOUT_SECONDS` | `120` | Leader 模型调用超时 |
+
+### Logging
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `APP_LOG_LEVEL` | `INFO` | 日志等级 |
+| `APP_LOG_FILE` | `1` | 是否写入文件日志 |
+
+日志默认写入：
+
+```text
+artifacts/logs/<run_tag>.log
+```
+
+---
+
+## 🧭 适用场景
+
+| 场景 | 可以怎么用 |
+| --- | --- |
+| 自动代码任务拆解 | 将一个大需求拆成多个 PlanItem，并逐步推进 |
+| 仓库级修复 | Worker 在隔离环境中分析、修改和验证目标仓库 |
+| 事故自动响应 | 接入日志事件，触发 incident_new / incident_regressed |
+| 研发控制台 | 用 Web UI 查看会话、计划、日志和运行状态 |
+| 长任务恢复 | 使用 thread_id 和 checkpoint 让任务断点续跑 |
+| 自动审查 | Reviewer 检查 Worker 输出并决定是否继续修正 |
+| GitHub 自动协作 | 将 Worker 的结果连接到分支、提交和 PR 流程 |
+
+---
+
+## 🧪 内置测试仓库：Ecommerce Platform
+
+仓库中包含 `ecommerce-platform/`，它是一个独立的电商微服务测试仓库，用来承载真实流量、故障注入、日志采集、回放验证和 Agent 自动修复链路。
+
+这个目录不是普通示例代码，而是系统的目标靶场：主运行时负责发现、规划和派工，`ecommerce-platform/` 负责提供可被压测、可被打坏、可被修复、可被回归验证的真实服务环境。
+
+### 服务组成
+
+- user service
+- order service
+- inventory service
+- payment service
+- nginx gateway
+- prometheus config
+- traffic simulator
+- local reload scripts
+- service-level tests
+
+### 可以验证的工程能力
+
+- incident 触发
+- service bug 定位
+- Worker 修复
+- 回归测试
+- 蓝绿切换脚本
+- 本地监控页面
+- JSONL 结构化日志采集
+- trace_id 串联 gateway 和 service 记录
+- traceback 驱动的问题定位
+- 真实请求回放
+- 百万级离线流量数据集生成
+
+### 本地启动测试仓库
+
+```bash
+cd ecommerce-platform
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+bash scripts/run_local_reload_stack.sh
+```
+
+启动后会运行本地网关和多个服务。如果默认端口被占用，脚本会自动选择可用端口，并写入：
+
+```text
+ecommerce-platform/.runtime/local-stack/ports.env
+```
+
+常用入口：
+
+| 入口 | 说明 |
+| --- | --- |
+| `/` | 网关首页 |
+| `/monitor` | 本地监控大屏 |
+| `/api/monitor/summary` | 监控摘要 |
+| `/api/monitor/stream` | SSE 实时监控流 |
+| `logs/ecommerce-debug.jsonl` | 统一结构化运行日志 |
+
+停止本地测试仓库：
+
+```bash
+bash scripts/stop_local_reload_stack.sh
+```
+
+---
+
+## 🌊 百万流量与日志回放
+
+`ecommerce-platform/` 内置了两类流量能力：在线流量模拟和离线百万级数据集生成。
+
+### 在线持续流量
+
+持续请求本地网关，模拟用户浏览库存、创建订单、查询订单、计算支付金额等行为：
+
+```bash
+cd ecommerce-platform
+.venv/bin/python scripts/traffic_simulator.py --base-url http://127.0.0.1:58080
+```
+
+Locust 版本的流量模型位于：
+
+```text
+ecommerce-platform/traffic/locustfile.py
+ecommerce-platform/traffic/shape.py
+```
+
+其中 `shape.py` 实现了压缩的一天访问曲线，包含早高峰、午间峰值、晚高峰和夜间低谷。它可以让系统在更接近真实业务节奏的负载下产生日志。
+
+### 百万级离线日志数据集
+
+如果需要大规模样本，可以直接生成百万级 JSONL 日志数据集：
+
+```bash
+cd ecommerce-platform
+.venv/bin/python scripts/generate_log_dataset.py \
+  --output-dir logs/datasets/million-traffic-realistic \
+  --gateway-records 1000000 \
+  --shards 8 \
+  --days 7 \
+  --clean
+```
+
+生成结果包含：
+
+- 正常访问流量
+- warning 流量
+- error 流量
+- 带 traceback 的服务异常
+- 与真实故障路径一致的 `IndexError`
+- 与真实故障路径一致的 `KeyError`
+- 与真实故障路径一致的 `AttributeError`
+- 与真实故障路径一致的 `TypeError`
+
+推荐目录结构：
+
+```text
+ecommerce-platform/logs/datasets/million-traffic-realistic/
+  manifest.json
+  traffic-shard-01.jsonl
+  traffic-shard-02.jsonl
+  ...
+  traffic-shard-08.jsonl
+```
+
+`manifest.json` 会记录总量、分片、时间范围和异常分布。`traffic-shard-*.jsonl` 则保存原始结构化流量记录。
+
+### 日志回放
+
+历史日志可以重新打回本地网关，用于复现问题或验证修复效果：
+
+```bash
+cd ecommerce-platform
+.venv/bin/python scripts/replay_log.py \
+  --input logs/ecommerce-debug.jsonl \
+  --base-url http://127.0.0.1:58080 \
+  --limit 500
+```
+
+回放输出默认写入：
+
+```text
+ecommerce-platform/logs/replay-results.jsonl
+```
+
+### 预埋故障类型
+
+测试仓库内置多种可打开的故障开关，方便构造稳定的 traceback：
+
+| 开关 | 服务 | 典型异常 | 触发方式 |
+| --- | --- | --- | --- |
+| `BUG_INDEX_ERROR=true` | order | `IndexError` | `GET /api/v1/orders/user/{new_user}` |
+| `BUG_ORDER_COUPON_KEY=true` | order | `KeyError` | 使用未知 `coupon_code` 创建订单 |
+| `BUG_RACE_CONDITION=true` | inventory | `InsufficientStockError` | 高频并发下单 |
+| `BUG_INVENTORY_MISSING_ROW=true` | inventory | `AttributeError` | 查询损坏商品 ID |
+| `BUG_FLOAT_PRECISION=true` | payment | 金额精度偏差 | `GET /api/v1/payments/calculate` |
+| `BUG_PAYMENT_GATEWAY_KEY=true` | payment | `KeyError` | 使用 coupon discount 计算支付 |
+| `BUG_NULL_VIP=true` | user | `TypeError` | 新用户请求 discount |
+
+这些故障可以和主运行时的 incident 链路连接，形成：
+
+```mermaid
+flowchart LR
+    TRAFFIC["百万流量 / 在线请求"] --> LOG["JSONL Logs"]
+    LOG --> INCIDENT["Incident Fingerprint"]
+    INCIDENT --> RUNTIME["Code Terminator Runtime"]
+    RUNTIME --> WORKER["Docker Worker Fix"]
+    WORKER --> TEST["Regression Test"]
+    TEST --> REPLAY["Replay Traffic"]
+```
+
+---
+
+## 📦 项目结构
+
+```text
+src/
+  agents/              # leader / worker / reviewer
+  api/                 # FastAPI routes, models, runtime service
+  app/                 # graph, state, hook bus, incident, gitops, plan state machine
+  datagov/             # bootstrap package
+  memory/              # checkpoint + long-term memory
+  observability/       # logging helpers
+  prompts/             # role templates
+  skills/              # role-scoped skills
+  tools/               # tool registry + worker dispatch tools
+web/                   # React + Vite console
+docker/worker-codex/   # Worker Dockerfile
+configs/               # OpenAI-compatible / Kimi integration examples
+scripts/               # dev / smoke / worker / regression scripts
+docs/                  # API / logging / smoke evidence
+ecommerce-platform/    # microservice test repository and traffic lab
+```
+
+### 关键文件
+
+| 文件 | 说明 |
+| --- | --- |
+| `src/app/graph.py` | LangGraph runtime 主图 |
+| `src/agents/leader.py` | Leader Agent |
+| `src/tools/call_code_worker_tool.py` | Worker 派发工具 |
+| `src/api/services/runtime_service.py` | API runtime service |
+| `src/app/hook_bus.py` | hook event bus |
+| `src/app/incidents.py` | incident 处理入口 |
+| `src/app/auto_review_merge.py` | 自动 review / merge 相关逻辑 |
+| `web/src/App.tsx` | Web 控制台主界面 |
+
+---
+
+## ✅ 验证命令
+
+基础 smoke：
+
+```bash
+uv run pytest
+```
+
+更完整的测试：
+
+```bash
+uv run pytest tests/
+```
+
+格式与类型检查：
+
+```bash
+uv run black --check src/datagov tests/bootstrap
+uv run isort --check-only src/datagov tests/bootstrap
+uv run mypy --strict src
+```
+
+重点链路测试：
+
+```bash
+uv run pytest \
+  tests/test_api_integration.py \
+  tests/test_hook_pump.py \
+  tests/test_worker_runtime_config.py \
+  tests/test_incident_auto_dispatch.py \
+  tests/test_auto_review_merge.py
+```
+
+---
+
+## 📚 相关文档
+
+- [API Reference](./docs/api.md)
+- [Logging Guide](./docs/logging.md)
+- [Auto Review Server Checklist](./docs/auto-review-server-checklist.md)
+- [Kimi Local Integration](./docs/kimi-local-integration.md)
+- [Environment Status](./ENV_STATUS.md)
+- [Contributing](./CONTRIBUTING.md)
+
+---
+
+<div align="center">
+
+<img src="https://capsule-render.vercel.app/api?type=waving&height=140&section=footer&color=0:FFD166,35:FF2D75,70:7C3AED,100:00E5FF" alt="footer" width="100%" />
+
+<b>Code Terminator</b> · Agentic software engineering runtime for real repositories.
+
+</div>
