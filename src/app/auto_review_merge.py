@@ -4,9 +4,11 @@ import os
 import re
 import subprocess
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
+from src.app.ecommerce_target import ecommerce_deploy_branch, ecommerce_repo_url
 from src.app.incident_registry import set_status
 from src.observability import get_logger, sanitize_text
 from src.runtime_settings import load_runtime_settings
@@ -15,6 +17,9 @@ logger = get_logger(__name__)
 
 _PR_URL_RE = re.compile(
     r"^https://github\.com/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)/pull/(?P<number>\d+)"
+)
+_REPO_URL_RE = re.compile(
+    r"^https://github\.com/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+?)(?:\.git)?/?$"
 )
 
 
@@ -28,8 +33,28 @@ def auto_review_merge_reload(
     commit_sha: str = "",
     pr_url: str = "",
 ) -> dict[str, Any]:
-    del service, exception_type, traceback_summary, branch_name, commit_sha
+    del service, exception_type, traceback_summary
     normalized_pr = pr_url.strip()
+    normalized_branch = branch_name.strip()
+    token = load_runtime_settings().github_token.strip()
+
+    if not normalized_pr and normalized_branch:
+        if not token:
+            return {
+                "ok": False,
+                "error": "missing_github_token",
+                "message": "GitHub token is required for automatic PR creation.",
+            }
+        created = _ensure_pr_for_branch(
+            branch_name=normalized_branch,
+            commit_sha=commit_sha.strip(),
+            fingerprint=fingerprint,
+            token=token,
+        )
+        if not created["ok"]:
+            return {"ok": False, "error": "create_pr_failed", **created}
+        normalized_pr = str(created.get("pr_url", "")).strip()
+
     if not normalized_pr:
         return {
             "ok": False,
@@ -37,7 +62,6 @@ def auto_review_merge_reload(
             "message": "Worker did not return a PR URL; falling back to manual review.",
         }
 
-    token = load_runtime_settings().github_token.strip()
     if not token:
         return {
             "ok": False,
@@ -64,6 +88,58 @@ def auto_review_merge_reload(
         "review": review,
         "merge": merge,
     }
+
+
+def _ensure_pr_for_branch(
+    *,
+    branch_name: str,
+    commit_sha: str,
+    fingerprint: str,
+    token: str,
+) -> dict[str, Any]:
+    parsed = _parse_github_repo_url(ecommerce_repo_url())
+    if parsed is None:
+        return {
+            "ok": False,
+            "stderr": f"Unsupported GitHub repo URL: {ecommerce_repo_url()}",
+            "status_code": 0,
+        }
+    owner, repo = parsed
+    head_query = quote(f"{owner}:{branch_name}", safe="")
+    existing = _github_request(
+        "GET",
+        f"https://api.github.com/repos/{owner}/{repo}/pulls?head={head_query}&state=open",
+        token=token,
+    )
+    if existing["ok"] and isinstance(existing.get("json"), list):
+        pulls = existing["json"]
+        if pulls:
+            pr_url = str(pulls[0].get("html_url", "")).strip()
+            if pr_url:
+                return {"ok": True, "pr_url": pr_url, "json": pulls[0]}
+
+    body_lines = [
+        f"Auto-generated fix for incident `{fingerprint}`.",
+        "",
+        f"- Branch: `{branch_name}`",
+    ]
+    if commit_sha:
+        body_lines.append(f"- Commit: `{commit_sha}`")
+    created = _github_request(
+        "POST",
+        f"https://api.github.com/repos/{owner}/{repo}/pulls",
+        token=token,
+        json={
+            "title": f"fix: resolve incident {fingerprint[:12]}",
+            "head": branch_name,
+            "base": ecommerce_deploy_branch(),
+            "body": "\n".join(body_lines),
+        },
+    )
+    if not created["ok"] or not isinstance(created.get("json"), dict):
+        return created
+    pr_url = str(created["json"].get("html_url", "")).strip()
+    return {**created, "pr_url": pr_url}
 
 
 def _approve_pr(pr_url: str, *, token: str) -> dict[str, Any]:
@@ -155,6 +231,13 @@ def _parse_github_pr_url(pr_url: str) -> tuple[str, str, str] | None:
     if match is None:
         return None
     return match.group("owner"), match.group("repo"), match.group("number")
+
+
+def _parse_github_repo_url(repo_url: str) -> tuple[str, str] | None:
+    match = _REPO_URL_RE.match(repo_url.strip())
+    if match is None:
+        return None
+    return match.group("owner"), match.group("repo")
 
 
 def _github_request(
