@@ -18,8 +18,8 @@ import {
   sendMessageStream,
 } from "./api";
 import type {
-  AgentStatus,
   ActivityLogEntry,
+  AgentStatus,
   ChatMessage,
   ConversationSummary,
   PlanItem,
@@ -43,9 +43,9 @@ const AGENT_LABELS: Record<string, string> = {
 };
 
 const SUGGESTIONS: string[] = [
-  "帮我给这个仓库生成发版与变更日志流程",
-  "给我规划一下从 0 到 1 搭建 CI/CD 的任务列表",
-  "对现有代码做一次架构梳理，输出重构计划",
+  "帮我梳理当前仓库的自动修复链路",
+  "规划一次从异常发现到修复验证的任务流程",
+  "分析前端控制台还能补哪些可观测能力",
 ];
 
 function formatDateTime(iso: string): string {
@@ -178,8 +178,6 @@ export function App() {
     ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`;
   }, [input]);
 
-  // Periodically refresh plan snapshot for active conversation so hook-triggered
-  // changes (subagent completion) can show up without a new user message.
   useEffect(() => {
     if (!activeConversationId) return;
     const timer = window.setInterval(() => {
@@ -401,7 +399,7 @@ export function App() {
         </div>
 
         <button className="new-chat" onClick={startNewConversation} type="button">
-          <span className="plus">+</span> 新建对话
+          <span className="plus">+</span> 新建会话
         </button>
 
         <div className="sidebar-section">
@@ -469,18 +467,18 @@ export function App() {
                       updated_at: "",
                     },
                   )
-                : "新对话"}
+                : "新会话"}
             </div>
             <div className="main-subtitle">
               {activeConversationId
                 ? `thread · ${activeConversationId}`
-                : "发送第一条消息以开始"}
+                : "发送第一条消息开始任务"}
             </div>
           </div>
           <div className="main-actions">
             <span className={`status-dot ${loading ? "busy" : "idle"}`} />
             <span className="status-text">
-              {loading ? "主 Agent 工作中…" : "就绪"}
+              {loading ? "主 Agent 工作中" : "就绪"}
             </span>
           </div>
         </header>
@@ -494,10 +492,13 @@ export function App() {
 
         <section className="runtime-settings-bar">
           <div className="runtime-settings-meta">
-            <strong>GitHub Token</strong>
-            <span>
-              worker 默认鉴权走本地运行时配置，不再读取环境变量。
-            </span>
+            <div>
+              <strong>GitHub Token</strong>
+              <span>Runtime credential</span>
+            </div>
+            <p>
+              保存后会注入后端任务运行时，用于目标仓库的分支、提交和协作流程。
+            </p>
           </div>
           <div className="runtime-settings-controls">
             <input
@@ -522,7 +523,7 @@ export function App() {
               disabled={savingToken || !tokenDirty}
               onClick={() => void persistGithubToken()}
             >
-              {savingToken ? "保存中…" : "保存"}
+              {savingToken ? "保存中" : "保存"}
             </button>
             <label className="auto-review-toggle">
               <input
@@ -537,16 +538,17 @@ export function App() {
             {tokenStatus ||
               (runtimeSettings?.updated_at
                 ? `上次更新 ${formatDateTime(runtimeSettings.updated_at)}`
-                : "保存后会立刻作为后端 worker 的默认 GitHub 鉴权。")}
+                : "保存后会作为后端任务的默认 GitHub 鉴权。")}
           </div>
         </section>
 
         <section className="chat-feed" aria-live="polite">
           {messages.length === 0 ? (
             <div className="chat-empty">
-              <h2>你好，我是 Code Terminator 的主 Agent</h2>
+              <div className="empty-kicker">Control Console</div>
+              <h2>把复杂代码任务拆成可观察的执行流程</h2>
               <p>
-                告诉我你想完成什么，我会拆解成任务计划、调度 worker 与 reviewer，并把每一步写在右侧的执行台上。
+                输入一个工程目标，系统会维护会话、计划、执行日志和运行时配置。你可以先配置 GitHub Token，再发起任务。
               </p>
               <div className="suggestions">
                 {SUGGESTIONS.map((s) => (
@@ -611,7 +613,7 @@ export function App() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
-              placeholder="给主 Agent 发消息… Shift+Enter 换行"
+              placeholder="给主 Agent 发送消息，Shift+Enter 换行"
               disabled={loading}
               rows={1}
             />
@@ -628,7 +630,7 @@ export function App() {
             </button>
           </div>
           <div className="composer-hint">
-            <span>按 Enter 发送 · Shift+Enter 换行</span>
+            <span>Enter 发送 · Shift+Enter 换行</span>
             <span>{input.length} 字</span>
           </div>
         </form>
@@ -636,7 +638,10 @@ export function App() {
 
       <aside className="inspector">
         <div className="inspector-head">
-          <h2>执行观察台</h2>
+          <div>
+            <h2>执行观察台</h2>
+            <span>Plan & Activity</span>
+          </div>
         </div>
 
         <section className="plan-card">
@@ -662,7 +667,7 @@ export function App() {
             ))}
             {planItems.length === 0 ? (
               <li className="plan-empty">
-                还没有计划。发送一个任务描述，主 Agent 会在这里生成 list。
+                还没有计划。发送一个任务描述后，主 Agent 会在这里生成执行清单。
               </li>
             ) : null}
           </ol>
@@ -706,7 +711,7 @@ function PlanRow({ item }: { item: PlanItem }) {
             : item.status === "failed"
               ? "!"
               : item.status === "in_progress"
-                ? "▶"
+                ? "•"
                 : ""}
         </span>
         <div className="plan-main">
