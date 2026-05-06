@@ -6,10 +6,6 @@
   <a href="./README.md">完整中文主页</a>
   ·
   <a href="./README.en.md">English</a>
-  ·
-  <a href="./docs/api.md">API Docs</a>
-  ·
-  <a href="./CONTRIBUTING.md">Contributing</a>
 </p>
 
 </div>
@@ -25,11 +21,10 @@
 - 多智能体运行时介绍
 - Leader / Worker / Reviewer 架构
 - FastAPI + SSE + React Web Console
-- Docker Codex Worker
+- 隔离执行环境
 - Incident Auto Dispatch
 - Memory & Checkpoint
-- 内置测试仓库 `ecommerce-platform/`
-- 百万流量日志生成与回放
+- Demo 仓库地址占位
 - 配置速查
 - 验证命令
 - 项目结构

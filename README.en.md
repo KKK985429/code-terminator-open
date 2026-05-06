@@ -2,16 +2,16 @@
 
 <img src="https://capsule-render.vercel.app/api?type=waving&height=230&color=0:00E5FF,35:7C3AED,70:FF2D75,100:FFD166&text=CODE%20TERMINATOR&fontAlign=50&fontAlignY=38&fontSize=56&fontColor=FFFFFF&desc=Autonomous%20Multi-Agent%20Software%20Runtime&descAlign=50&descAlignY=60&animation=twinkling" alt="Code Terminator hero" width="100%" />
 
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=24&duration=2200&pause=700&color=00E5FF&center=true&vCenter=true&width=940&lines=Leader+Plans+%E2%9A%A1+Workers+Patch+%E2%9A%A1+Reviewer+Guards;Incidents+Wake+The+System+%E2%9A%A1+Agents+Fix+The+Repo;FastAPI+%2B+SSE+%2B+React+%2B+Docker+Codex+Workers)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=24&duration=2200&pause=700&color=00E5FF&center=true&vCenter=true&width=940&lines=Plan+Tracking+%E2%9A%A1+Task+Dispatch+%E2%9A%A1+Runtime+Events;Incident+Input+%E2%9A%A1+Repository+Fix+%E2%9A%A1+Review+Loop;FastAPI+%2B+SSE+%2B+React+%2B+Task+Runners)](https://git.io/typing-svg)
 
 <p>
   <a href="./README.md">简体中文</a>
   ·
   <a href="./README.en.md">English</a>
   ·
-  <a href="./docs/api.md">API Docs</a>
+  <a href="./docs/api.en.md">API Docs</a>
   ·
-  <a href="./CONTRIBUTING.md">Contributing</a>
+  <a href="./CONTRIBUTING.en.md">Contributing</a>
 </p>
 
 <p>
@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/badge/LangGraph-Agentic_Runtime-1C7ED6?style=for-the-badge" alt="LangGraph" />
   <img src="https://img.shields.io/badge/FastAPI-SSE_Runtime-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/React-Vite_Console-61DAFB?style=for-the-badge&logo=react&logoColor=20232A" alt="React" />
-  <img src="https://img.shields.io/badge/Docker-Codex_Worker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Docker-Isolated_Worker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/License-MIT-2EA043?style=for-the-badge&logo=open-source-initiative&logoColor=white" alt="MIT" />
 </p>
 
@@ -41,7 +41,7 @@ The project connects **LangGraph orchestration**, **FastAPI streaming APIs**, **
 
 ---
 
-## ✨ Feature Matrix
+## ✨ Core Capabilities
 
 | Module | Capability | Engineering Value |
 | --- | --- | --- |
@@ -50,7 +50,7 @@ The project connects **LangGraph orchestration**, **FastAPI streaming APIs**, **
 | 🛡️ Reviewer Agent | Reviews results and checks quality | Keeps the loop from blindly accepting generated output |
 | 🌊 SSE Streaming | Streams runtime events to the web UI | Makes planning, logs, and results visible in real time |
 | 🧩 Plan State Machine | Tracks pending / running / done items | Provides observable and recoverable progress |
-| 🐳 Docker Codex Worker | Runs worker jobs in containers | Isolates real repository tasks from the host workspace |
+| 🐳 Isolated Execution | Runs worker jobs in containers | Isolates repository tasks from the host workspace |
 | 🧬 Memory + Checkpoint | SQLite checkpoint + Chroma memory | Supports recovery, long context, and historical reuse |
 | 🔔 Incident Wakeup | Converts incidents into repair work | Moves from passive chat to event-driven repair |
 | 🔀 GitHub Flow | Token injection, PR fallback, automation hooks | Connects agent output with real collaboration workflows |
@@ -73,7 +73,7 @@ The project connects **LangGraph orchestration**, **FastAPI streaming APIs**, **
   </tr>
   <tr>
     <td width="50%">
-      <h3>🐳 Isolated Code Worker</h3>
+      <h3>🐳 Isolated Execution</h3>
       <p>Worker tasks are packaged into job bundles and can run inside Docker. Inputs, outputs, stdout, stderr, and structured results are persisted for replay and debugging.</p>
     </td>
     <td width="50%">
@@ -112,7 +112,7 @@ flowchart TB
     LEADER --> REVIEWER["🛡️ Reviewer Agent"]
 
     TOOLS --> WORKER_TOOL["🚀 call_code_worker_tool"]
-    WORKER_TOOL --> DOCKER["🐳 Docker Codex Worker"]
+    WORKER_TOOL --> DOCKER["🐳 Task Runner"]
     DOCKER --> REPO["📦 Target Repository"]
 
     API --> SSE["🌊 SSE Event Stream"]
@@ -131,7 +131,7 @@ flowchart TB
 
 ---
 
-## 🧪 Runtime Flow
+## 🧪 Execution Flow
 
 > Open the web console, submit an engineering task, watch the Leader create a plan, let Workers execute isolated code jobs, stream progress through SSE, persist the state, and let the Reviewer inspect the output. If an incident event arrives, the same runtime can wake up and start a repair chain.
 
@@ -142,7 +142,7 @@ sequenceDiagram
     participant A as FastAPI
     participant G as LangGraph
     participant L as Leader
-    participant D as Docker Worker
+    participant D as Task Runner
     participant R as Reviewer
     participant M as Memory
 
@@ -285,16 +285,16 @@ npm run dev
 
 ---
 
-## 🐳 Docker Worker
+## 🐳 Isolated Execution Environment
 
-Build a worker image:
+Build an execution image:
 
 ```bash
 docker build -t code-terminator/worker-codex -f docker/worker-codex/Dockerfile .
 export CODEX_WORKER_DOCKER_IMAGE="code-terminator/worker-codex"
 ```
 
-Worker jobs are persisted as bundles:
+Each dispatched task is persisted as a job bundle:
 
 ```text
 .code-terminator/
@@ -311,11 +311,11 @@ Key settings:
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `CODEX_WORKER_DOCKER_IMAGE` | `mcr.microsoft.com/playwright:v1.58.2-noble` | Worker image |
-| `CODEX_WORKER_TIMEOUT_SECONDS` | `1800` | Worker timeout |
+| `CODEX_WORKER_DOCKER_IMAGE` | `mcr.microsoft.com/playwright:v1.58.2-noble` | Execution image |
+| `CODEX_WORKER_TIMEOUT_SECONDS` | `1800` | Task timeout |
 | `CODEX_WORKER_CONTAINER_WORKDIR` | `/workspace` | Container workdir |
 | `CODEX_WORKER_CODEX_BIN` | `codex` | Command inside container |
-| `CODEX_WORKER_MODEL` | empty | Worker model override |
+| `CODEX_WORKER_MODEL` | empty | Model override for dispatched tasks |
 | `CODEX_WORKER_JOB_ROOT` | `.code-terminator/worker-jobs` | Job bundle root |
 | `CODEX_WORKER_DOCKER_ARGS` | empty | Extra args for `docker run` |
 
@@ -346,126 +346,15 @@ flowchart LR
 
 ---
 
-## 🧪 Built-in Test Repository: Ecommerce Platform
+## 🧪 Demo Repository
 
-`ecommerce-platform/` is an independent microservice test repository used for traffic generation, fault injection, log collection, replay validation, and agent-driven repair.
-
-It acts as a target environment for the main runtime: the runtime detects, plans, and dispatches work; the ecommerce platform provides services that can be loaded, broken, repaired, and regression-tested.
-
-### Services
-
-- user service
-- order service
-- inventory service
-- payment service
-- nginx gateway
-- prometheus config
-- traffic simulator
-- local reload scripts
-- service-level tests
-
-### Local Startup
-
-```bash
-cd ecommerce-platform
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-bash scripts/run_local_reload_stack.sh
-```
-
-Common endpoints:
-
-| Entry | Description |
-| --- | --- |
-| `/` | Gateway home |
-| `/monitor` | Local monitoring dashboard |
-| `/api/monitor/summary` | Monitoring summary |
-| `/api/monitor/stream` | SSE monitoring stream |
-| `logs/ecommerce-debug.jsonl` | Unified structured runtime log |
-
-Stop the local stack:
-
-```bash
-bash scripts/stop_local_reload_stack.sh
-```
-
----
-
-## 🌊 Million-Traffic Logs & Replay
-
-`ecommerce-platform/` includes both online traffic simulation and offline million-scale JSONL dataset generation.
-
-### Online Traffic
-
-```bash
-cd ecommerce-platform
-.venv/bin/python scripts/traffic_simulator.py --base-url http://127.0.0.1:58080
-```
-
-Locust traffic models:
+The external demo repository can be listed here after it is prepared:
 
 ```text
-ecommerce-platform/traffic/locustfile.py
-ecommerce-platform/traffic/shape.py
+https://github.com/KKK985429/<your-demo-repository>
 ```
 
-`shape.py` models a compressed daily access curve with morning, lunch, evening, and night traffic patterns.
-
-### Million-Scale Offline Dataset
-
-```bash
-cd ecommerce-platform
-.venv/bin/python scripts/generate_log_dataset.py \
-  --output-dir logs/datasets/million-traffic-realistic \
-  --gateway-records 1000000 \
-  --shards 8 \
-  --days 7 \
-  --clean
-```
-
-The generated dataset includes:
-
-- normal traffic
-- warning traffic
-- error traffic
-- service exceptions with traceback
-- realistic `IndexError`
-- realistic `KeyError`
-- realistic `AttributeError`
-- realistic `TypeError`
-
-Suggested output layout:
-
-```text
-ecommerce-platform/logs/datasets/million-traffic-realistic/
-  manifest.json
-  traffic-shard-01.jsonl
-  traffic-shard-02.jsonl
-  ...
-  traffic-shard-08.jsonl
-```
-
-### Replay
-
-```bash
-cd ecommerce-platform
-.venv/bin/python scripts/replay_log.py \
-  --input logs/ecommerce-debug.jsonl \
-  --base-url http://127.0.0.1:58080 \
-  --limit 500
-```
-
-Fault switches:
-
-| Switch | Service | Typical Failure | Trigger |
-| --- | --- | --- | --- |
-| `BUG_INDEX_ERROR=true` | order | `IndexError` | `GET /api/v1/orders/user/{new_user}` |
-| `BUG_ORDER_COUPON_KEY=true` | order | `KeyError` | Create order with unknown `coupon_code` |
-| `BUG_RACE_CONDITION=true` | inventory | `InsufficientStockError` | High-frequency concurrent orders |
-| `BUG_INVENTORY_MISSING_ROW=true` | inventory | `AttributeError` | Query broken product ID |
-| `BUG_FLOAT_PRECISION=true` | payment | Money precision drift | `GET /api/v1/payments/calculate` |
-| `BUG_PAYMENT_GATEWAY_KEY=true` | payment | `KeyError` | Payment calculation with coupon discount |
-| `BUG_NULL_VIP=true` | user | `TypeError` | New user discount request |
+The demo repository should contain a reproducible target project, such as a backend service with seeded issues, tests, and validation scripts. This repository focuses on the runtime itself; target-system details can live in a dedicated demo repository.
 
 ---
 
@@ -540,7 +429,7 @@ docker/worker-codex/   # Worker Dockerfile
 configs/               # OpenAI-compatible / Kimi integration examples
 scripts/               # dev / smoke / worker / regression scripts
 docs/                  # API / logging / smoke evidence
-ecommerce-platform/    # microservice test repository and traffic lab
+ecommerce-platform/    # local demo target, replace with external demo repo later
 ```
 
 Key files:
@@ -593,12 +482,12 @@ uv run pytest \
 
 ## 📚 Related Docs
 
-- [API Reference](./docs/api.md)
+- [API Reference](./docs/api.en.md)
 - [Logging Guide](./docs/logging.md)
 - [Auto Review Server Checklist](./docs/auto-review-server-checklist.md)
 - [Kimi Local Integration](./docs/kimi-local-integration.md)
 - [Environment Status](./ENV_STATUS.md)
-- [Contributing](./CONTRIBUTING.md)
+- [Contributing](./CONTRIBUTING.en.md)
 
 ---
 

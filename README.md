@@ -2,16 +2,12 @@
 
 <img src="https://capsule-render.vercel.app/api?type=waving&height=230&color=0:00E5FF,35:7C3AED,70:FF2D75,100:FFD166&text=CODE%20TERMINATOR&fontAlign=50&fontAlignY=38&fontSize=56&fontColor=FFFFFF&desc=Autonomous%20Multi-Agent%20Software%20Runtime&descAlign=50&descAlignY=60&animation=twinkling" alt="Code Terminator hero" width="100%" />
 
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=24&duration=2200&pause=700&color=00E5FF&center=true&vCenter=true&width=940&lines=Leader+Plans+%E2%9A%A1+Workers+Patch+%E2%9A%A1+Reviewer+Guards;Incidents+Wake+The+System+%E2%9A%A1+Agents+Fix+The+Repo;FastAPI+%2B+SSE+%2B+React+%2B+Docker+Codex+Workers)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Orbitron&weight=800&size=24&duration=2200&pause=700&color=00E5FF&center=true&vCenter=true&width=940&lines=Plan+Tracking+%E2%9A%A1+Task+Dispatch+%E2%9A%A1+Runtime+Events;Incident+Input+%E2%9A%A1+Repository+Fix+%E2%9A%A1+Review+Loop;FastAPI+%2B+SSE+%2B+React+%2B+Task+Runners)](https://git.io/typing-svg)
 
 <p>
   <a href="./README.en.md">English</a>
   ·
   <a href="./README.zh-CN.md">简体中文</a>
-  ·
-  <a href="./docs/api.md">API Docs</a>
-  ·
-  <a href="./CONTRIBUTING.md">Contributing</a>
 </p>
 
 <p>
@@ -19,7 +15,7 @@
   <img src="https://img.shields.io/badge/LangGraph-Agentic_Runtime-1C7ED6?style=for-the-badge&logo=graph&logoColor=white" alt="LangGraph" />
   <img src="https://img.shields.io/badge/FastAPI-SSE_Runtime-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />
   <img src="https://img.shields.io/badge/React-Vite_Console-61DAFB?style=for-the-badge&logo=react&logoColor=20232A" alt="React" />
-  <img src="https://img.shields.io/badge/Docker-Codex_Worker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Docker-Isolated_Worker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
   <img src="https://img.shields.io/badge/License-MIT-2EA043?style=for-the-badge&logo=open-source-initiative&logoColor=white" alt="MIT" />
 </p>
 
@@ -28,7 +24,7 @@
   <img src="https://img.shields.io/badge/Web_Console-live-FF2D75?style=flat-square" alt="Web console" />
   <img src="https://img.shields.io/badge/Checkpoint-resumable-7C3AED?style=flat-square" alt="Checkpoint" />
   <img src="https://img.shields.io/badge/Memory-Chroma-FFD166?style=flat-square" alt="Memory" />
-  <img src="https://img.shields.io/badge/GitHub_PR-auto_flow-2EA043?style=flat-square&logo=github" alt="GitHub PR" />
+  <img src="https://img.shields.io/badge/GitHub-workflow_ready-2EA043?style=flat-square&logo=github" alt="GitHub workflow" />
   <img src="https://img.shields.io/badge/Incident_Auto_Dispatch-on-FF6B35?style=flat-square" alt="Incident dispatch" />
 </p>
 
@@ -46,7 +42,7 @@
 
 ---
 
-## ✨ 高能特性墙
+## ✨ 核心能力
 
 | 模块 | 能力 | 工程价值 |
 | --- | --- | --- |
@@ -55,7 +51,7 @@
 | 🛡️ Reviewer Agent | 反馈、审查、守住质量 | 让多智能体形成闭环，而不是盲目生成 |
 | 🌊 SSE Streaming | Web 端实时流式输出 | 用户能看到任务推进过程、事件和计划变化 |
 | 🧩 Plan State Machine | 计划项 pending / running / done | 支持可观测、可恢复、可追踪的任务运行 |
-| 🐳 Docker Codex Worker | 容器化执行任务 | 隔离执行真实仓库任务，减少污染本地环境 |
+| 🐳 隔离执行环境 | 容器化执行任务 | 隔离执行真实仓库任务，减少污染本地环境 |
 | 🧬 Memory + Checkpoint | SQLite checkpoint + Chroma memory | 支持断点恢复、长期上下文和历史复用 |
 | 🔔 Incident Wakeup | 事故事件触发自动修复链路 | 从日志/异常到自动派工修复，接近线上运维场景 |
 | 🔀 GitHub Flow | Token 注入、PR fallback、自动化协作 | 连接真实研发协作流程 |
@@ -78,7 +74,7 @@
   </tr>
   <tr>
     <td width="50%">
-      <h3>🐳 Isolated Code Worker</h3>
+      <h3>🐳 Isolated Execution</h3>
       <p>Worker 任务会被打包成 job bundle，并可在 Docker 中执行。输入、输出、stdout、stderr、结构化结果都会落盘，方便审计、复现和问题定位。</p>
     </td>
     <td width="50%">
@@ -117,7 +113,7 @@ flowchart TB
     LEADER --> REVIEWER["🛡️ Reviewer Agent"]
 
     TOOLS --> WORKER_TOOL["🚀 call_code_worker_tool"]
-    WORKER_TOOL --> DOCKER["🐳 Docker Codex Worker"]
+    WORKER_TOOL --> DOCKER["🐳 Task Runner"]
     DOCKER --> REPO["📦 Target Repository"]
 
     API --> SSE["🌊 SSE Event Stream"]
@@ -136,7 +132,7 @@ flowchart TB
 
 ---
 
-## 🧪 一句话运行路线
+## 🧪 运行流程
 
 > 打开 Web 控制台，输入一个工程任务；Leader 生成计划，Worker 被派发到 Docker 中执行，过程通过 SSE 实时显示，任务状态落盘，结果回传后 Reviewer 进行审查；如果系统收到 incident 事件，还能自动唤醒修复链路。
 
@@ -147,7 +143,7 @@ sequenceDiagram
     participant A as FastAPI
     participant G as LangGraph
     participant L as Leader
-    participant D as Docker Worker
+    participant D as Task Runner
     participant R as Reviewer
     participant M as Memory
 
@@ -354,16 +350,16 @@ npm run dev
 
 ---
 
-## 🐳 Docker Worker
+## 🐳 隔离执行环境
 
-如果要让 Leader 真正把任务派发给容器里的 Worker：
+如果要让 Leader 把任务派发给容器里的执行环境：
 
 ```bash
 docker build -t code-terminator/worker-codex -f docker/worker-codex/Dockerfile .
 export CODEX_WORKER_DOCKER_IMAGE="code-terminator/worker-codex"
 ```
 
-Worker 执行时会生成 job bundle：
+执行环境会为每个任务生成 job bundle：
 
 ```text
 .code-terminator/
@@ -378,15 +374,15 @@ Worker 执行时会生成 job bundle：
 
 这个设计的好处是：每一次 Agent 执行都有可追踪证据，方便审计、复盘、回放和定位失败原因。
 
-### Worker 关键配置
+### 关键配置
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `CODEX_WORKER_DOCKER_IMAGE` | `mcr.microsoft.com/playwright:v1.58.2-noble` | Worker 镜像 |
-| `CODEX_WORKER_TIMEOUT_SECONDS` | `1800` | 单次 Worker 超时 |
+| `CODEX_WORKER_DOCKER_IMAGE` | `mcr.microsoft.com/playwright:v1.58.2-noble` | 执行环境镜像 |
+| `CODEX_WORKER_TIMEOUT_SECONDS` | `1800` | 单次任务超时 |
 | `CODEX_WORKER_CONTAINER_WORKDIR` | `/workspace` | 容器内工作目录 |
 | `CODEX_WORKER_CODEX_BIN` | `codex` | 容器内执行命令 |
-| `CODEX_WORKER_MODEL` | 空 | 指定 Worker 使用的模型 |
+| `CODEX_WORKER_MODEL` | 空 | 指定执行任务使用的模型 |
 | `CODEX_WORKER_JOB_ROOT` | `.code-terminator/worker-jobs` | Worker job bundle 根目录 |
 | `CODEX_WORKER_DOCKER_ARGS` | 空 | 额外传给 `docker run` 的参数 |
 
@@ -542,174 +538,15 @@ artifacts/logs/<run_tag>.log
 
 ---
 
-## 🧪 内置测试仓库：Ecommerce Platform
+## 🧪 Demo 仓库
 
-仓库中包含 `ecommerce-platform/`，它是一个独立的电商微服务测试仓库，用来承载真实流量、故障注入、日志采集、回放验证和 Agent 自动修复链路。
-
-这个目录不是普通示例代码，而是系统的目标靶场：主运行时负责发现、规划和派工，`ecommerce-platform/` 负责提供可被压测、可被打坏、可被修复、可被回归验证的真实服务环境。
-
-### 服务组成
-
-- user service
-- order service
-- inventory service
-- payment service
-- nginx gateway
-- prometheus config
-- traffic simulator
-- local reload scripts
-- service-level tests
-
-### 可以验证的工程能力
-
-- incident 触发
-- service bug 定位
-- Worker 修复
-- 回归测试
-- 蓝绿切换脚本
-- 本地监控页面
-- JSONL 结构化日志采集
-- trace_id 串联 gateway 和 service 记录
-- traceback 驱动的问题定位
-- 真实请求回放
-- 百万级离线流量数据集生成
-
-### 本地启动测试仓库
-
-```bash
-cd ecommerce-platform
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-bash scripts/run_local_reload_stack.sh
-```
-
-启动后会运行本地网关和多个服务。如果默认端口被占用，脚本会自动选择可用端口，并写入：
+后续可在这里放置已经整理好的 Demo 仓库地址：
 
 ```text
-ecommerce-platform/.runtime/local-stack/ports.env
+https://github.com/KKK985429/<your-demo-repository>
 ```
 
-常用入口：
-
-| 入口 | 说明 |
-| --- | --- |
-| `/` | 网关首页 |
-| `/monitor` | 本地监控大屏 |
-| `/api/monitor/summary` | 监控摘要 |
-| `/api/monitor/stream` | SSE 实时监控流 |
-| `logs/ecommerce-debug.jsonl` | 统一结构化运行日志 |
-
-停止本地测试仓库：
-
-```bash
-bash scripts/stop_local_reload_stack.sh
-```
-
----
-
-## 🌊 百万流量与日志回放
-
-`ecommerce-platform/` 内置了两类流量能力：在线流量模拟和离线百万级数据集生成。
-
-### 在线持续流量
-
-持续请求本地网关，模拟用户浏览库存、创建订单、查询订单、计算支付金额等行为：
-
-```bash
-cd ecommerce-platform
-.venv/bin/python scripts/traffic_simulator.py --base-url http://127.0.0.1:58080
-```
-
-Locust 版本的流量模型位于：
-
-```text
-ecommerce-platform/traffic/locustfile.py
-ecommerce-platform/traffic/shape.py
-```
-
-其中 `shape.py` 实现了压缩的一天访问曲线，包含早高峰、午间峰值、晚高峰和夜间低谷。它可以让系统在更接近真实业务节奏的负载下产生日志。
-
-### 百万级离线日志数据集
-
-如果需要大规模样本，可以直接生成百万级 JSONL 日志数据集：
-
-```bash
-cd ecommerce-platform
-.venv/bin/python scripts/generate_log_dataset.py \
-  --output-dir logs/datasets/million-traffic-realistic \
-  --gateway-records 1000000 \
-  --shards 8 \
-  --days 7 \
-  --clean
-```
-
-生成结果包含：
-
-- 正常访问流量
-- warning 流量
-- error 流量
-- 带 traceback 的服务异常
-- 与真实故障路径一致的 `IndexError`
-- 与真实故障路径一致的 `KeyError`
-- 与真实故障路径一致的 `AttributeError`
-- 与真实故障路径一致的 `TypeError`
-
-推荐目录结构：
-
-```text
-ecommerce-platform/logs/datasets/million-traffic-realistic/
-  manifest.json
-  traffic-shard-01.jsonl
-  traffic-shard-02.jsonl
-  ...
-  traffic-shard-08.jsonl
-```
-
-`manifest.json` 会记录总量、分片、时间范围和异常分布。`traffic-shard-*.jsonl` 则保存原始结构化流量记录。
-
-### 日志回放
-
-历史日志可以重新打回本地网关，用于复现问题或验证修复效果：
-
-```bash
-cd ecommerce-platform
-.venv/bin/python scripts/replay_log.py \
-  --input logs/ecommerce-debug.jsonl \
-  --base-url http://127.0.0.1:58080 \
-  --limit 500
-```
-
-回放输出默认写入：
-
-```text
-ecommerce-platform/logs/replay-results.jsonl
-```
-
-### 预埋故障类型
-
-测试仓库内置多种可打开的故障开关，方便构造稳定的 traceback：
-
-| 开关 | 服务 | 典型异常 | 触发方式 |
-| --- | --- | --- | --- |
-| `BUG_INDEX_ERROR=true` | order | `IndexError` | `GET /api/v1/orders/user/{new_user}` |
-| `BUG_ORDER_COUPON_KEY=true` | order | `KeyError` | 使用未知 `coupon_code` 创建订单 |
-| `BUG_RACE_CONDITION=true` | inventory | `InsufficientStockError` | 高频并发下单 |
-| `BUG_INVENTORY_MISSING_ROW=true` | inventory | `AttributeError` | 查询损坏商品 ID |
-| `BUG_FLOAT_PRECISION=true` | payment | 金额精度偏差 | `GET /api/v1/payments/calculate` |
-| `BUG_PAYMENT_GATEWAY_KEY=true` | payment | `KeyError` | 使用 coupon discount 计算支付 |
-| `BUG_NULL_VIP=true` | user | `TypeError` | 新用户请求 discount |
-
-这些故障可以和主运行时的 incident 链路连接，形成：
-
-```mermaid
-flowchart LR
-    TRAFFIC["百万流量 / 在线请求"] --> LOG["JSONL Logs"]
-    LOG --> INCIDENT["Incident Fingerprint"]
-    INCIDENT --> RUNTIME["Code Terminator Runtime"]
-    RUNTIME --> WORKER["Docker Worker Fix"]
-    WORKER --> TEST["Regression Test"]
-    TEST --> REPLAY["Replay Traffic"]
-```
+建议 Demo 仓库用于承载可复现的目标项目，例如一个带有后端服务、预置问题、测试用例和修复验证脚本的业务系统。主项目只保留运行时能力说明，具体 Demo 细节放到独立仓库维护。
 
 ---
 
@@ -731,7 +568,7 @@ docker/worker-codex/   # Worker Dockerfile
 configs/               # OpenAI-compatible / Kimi integration examples
 scripts/               # dev / smoke / worker / regression scripts
 docs/                  # API / logging / smoke evidence
-ecommerce-platform/    # microservice test repository and traffic lab
+ecommerce-platform/    # local demo target, replace with external demo repo later
 ```
 
 ### 关键文件
@@ -791,7 +628,6 @@ uv run pytest \
 - [Auto Review Server Checklist](./docs/auto-review-server-checklist.md)
 - [Kimi Local Integration](./docs/kimi-local-integration.md)
 - [Environment Status](./ENV_STATUS.md)
-- [Contributing](./CONTRIBUTING.md)
 
 ---
 
