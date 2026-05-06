@@ -348,13 +348,13 @@ flowchart LR
 
 ## 🧪 Demo Repository
 
-The external demo repository can be listed here after it is prepared:
+Companion target repository:
 
 ```text
-https://github.com/KKK985429/<your-demo-repository>
+https://github.com/KKK985429/ecommerce-platform-demo.git
 ```
 
-The demo repository should contain a reproducible target project, such as a backend service with seeded issues, tests, and validation scripts. This repository focuses on the runtime itself; target-system details can live in a dedicated demo repository.
+The demo repository contains a reproducible business service, seeded issues, tests, and validation scripts. `code-terminator` focuses on runtime orchestration, task dispatch, and observability; the demo repository provides the target project to repair and verify.
 
 ---
 

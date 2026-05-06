@@ -540,13 +540,13 @@ artifacts/logs/<run_tag>.log
 
 ## 🧪 Demo 仓库
 
-后续可在这里放置已经整理好的 Demo 仓库地址：
+本项目配套的目标业务仓库：
 
 ```text
-https://github.com/KKK985429/<your-demo-repository>
+https://github.com/KKK985429/ecommerce-platform-demo.git
 ```
 
-建议 Demo 仓库用于承载可复现的目标项目，例如一个带有后端服务、预置问题、测试用例和修复验证脚本的业务系统。主项目只保留运行时能力说明，具体 Demo 细节放到独立仓库维护。
+该仓库用于承载可复现的业务服务、预置问题、测试用例和修复验证脚本。`code-terminator` 负责运行时编排、任务派发和结果观察，Demo 仓库负责提供可被修复和验证的目标项目。
 
 ---
 
