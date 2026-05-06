@@ -175,6 +175,10 @@ button {
   gap: 8px;
 }
 
+.incident-section {
+  flex: 0 0 240px;
+}
+
 .sidebar-section-head {
   display: flex;
   justify-content: space-between;
@@ -262,6 +266,23 @@ button {
   font-size: 12px;
   text-align: center;
   padding: 22px 10px;
+}
+
+.incident-list {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.incident-item {
+  border-color: #e0e7ff;
+  background: linear-gradient(180deg, rgba(248, 250, 255, 0.9), rgba(255, 255, 255, 0.96));
+}
+
+.incident-item.active {
+  border-color: #93c5fd;
+  background:
+    linear-gradient(90deg, rgba(37, 99, 235, 0.1), transparent 70%),
+    linear-gradient(180deg, rgba(248, 250, 255, 0.9), rgba(255, 255, 255, 0.98));
 }
 
 .sidebar-footer {
@@ -680,6 +701,69 @@ button {
   margin: 64px auto 0;
   text-align: center;
   color: var(--text-sub);
+}
+
+.incident-overview {
+  max-width: 820px;
+  margin: 28px auto 0;
+  color: var(--text-sub);
+}
+
+.incident-overview h2 {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 28px;
+  line-height: 1.16;
+  letter-spacing: -0.04em;
+  font-weight: 820;
+}
+
+.incident-overview p {
+  margin: 0 0 20px;
+  line-height: 1.7;
+}
+
+.incident-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.incident-summary-card,
+.incident-trace-card {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: var(--shadow-tiny);
+}
+
+.incident-summary-card span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.incident-summary-card strong {
+  display: block;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.incident-trace {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.58;
+  color: var(--text-sub);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
 }
 
 .empty-kicker {
@@ -1181,6 +1265,10 @@ button {
   }
 
   .suggestions {
+    grid-template-columns: 1fr;
+  }
+
+  .incident-summary-grid {
     grid-template-columns: 1fr;
   }
 }

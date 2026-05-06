@@ -11,6 +11,16 @@ export type AgentStatusResponse = {
   roles: AgentStatus[];
 };
 
+export type AgentHealthResponse = {
+  ingest_enabled: boolean;
+  log_file: string;
+  log_file_exists: boolean;
+  last_log_offset: number;
+  incident_total: number;
+  incident_by_status: Record<string, number>;
+  planner_active: string;
+};
+
 export type ChatMessage = {
   message_id: string;
   conversation_id: string;
@@ -28,6 +38,27 @@ export type ConversationSummary = {
 
 export type ConversationListResponse = {
   conversations: ConversationSummary[];
+};
+
+export type IncidentEntry = {
+  fingerprint: string;
+  status: string;
+  thread_id: string;
+  first_seen_at: string;
+  occurrence_total: number;
+  service: string;
+  exception_type: string;
+  sample_traceback: string;
+  sample_trace_id?: string;
+  last_seen_at: string;
+  deployed_commit?: string;
+  deployed_at?: string;
+  verify_window_until?: string;
+};
+
+export type IncidentListResponse = {
+  total: number;
+  incidents: IncidentEntry[];
 };
 
 export type ChatHistoryResponse = {
