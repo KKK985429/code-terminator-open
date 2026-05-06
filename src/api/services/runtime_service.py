@@ -515,7 +515,10 @@ class RuntimeService:
                         continue
                     thread_id = wakeup["thread_id"]
                     event_type = str(wakeup.get("event_type", ""))
-                    should_resume = event_type != "incident_new"
+                    should_resume = event_type in {
+                        "incident_new",
+                        "incident_regressed",
+                    }
                     event_payload = {
                         "event_id": f"evt-incident-{uuid.uuid4().hex[:6]}",
                         "event_type": event_type,

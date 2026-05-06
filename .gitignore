@@ -213,6 +213,7 @@ __marimo__/
 artifacts/logs/
 cliagent/shell_gpt/
 opms-collab/
+kimi-cliagent-benchmark-latest.tar
 
 # OS cruft
 .DS_Store

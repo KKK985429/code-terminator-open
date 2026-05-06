@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
-from src.app.graph import leader_node
+from src.app.graph import _has_active_code_worker_call, leader_node
 from src.app.runtime_event_bus import RuntimeEventBus
 from src.app.state import EventEnvelope
 
@@ -74,8 +75,10 @@ def test_incident_new_directly_dispatches_code_worker_bundle(
     with patch(
         "src.tools.call_code_worker_tool.CallCodeWorkerTool._run_real_worker_and_emit_hook",
         return_value=None,
-    ):
+    ), patch("src.app.graph.incident_registry.set_status") as set_status:
         result = leader_node(state)
+
+    set_status.assert_called_once_with("0ab1a7d9d8e49df7", "running")
 
     plan_items = result["plan_items"]
     assert len(plan_items) == 1
@@ -120,7 +123,7 @@ def test_incident_new_does_not_duplicate_active_code_worker(
     with patch(
         "src.tools.call_code_worker_tool.CallCodeWorkerTool._run_real_worker_and_emit_hook",
         return_value=None,
-    ):
+    ), patch("src.app.graph.incident_registry.set_status"):
         first = leader_node(state)
         second = leader_node(
             {
@@ -133,3 +136,64 @@ def test_incident_new_does_not_duplicate_active_code_worker(
     calls = workflow["code_worker_calls"]
     assert len(calls) == 1
     assert second["event_log"][-1]["payload"]["event"] == "code_worker_already_active"
+
+
+def test_stale_code_worker_call_does_not_block_dispatch(monkeypatch: Any) -> None:
+    monkeypatch.setenv("CODEX_WORKER_ACTIVE_STALE_SECONDS", "60")
+    accepted_at = (datetime.now(UTC) - timedelta(minutes=10)).isoformat(
+        timespec="seconds"
+    )
+    call = {
+        "task_id": "incident-0ab1a7d9d8e4",
+        "subworker_id": "subworker-old",
+        "status": "in_progress",
+        "accepted_at": accepted_at,
+    }
+    core_memory = {"workflow": {"code_worker_calls": [call]}}
+
+    assert not _has_active_code_worker_call(
+        core_memory=core_memory,
+        task_id="incident-0ab1a7d9d8e4",
+    )
+    assert call["status"] == "stale"
+
+
+def test_incident_new_redispatches_when_existing_worker_is_stale(
+    monkeypatch: Any,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv("CODEX_WORKER_ACTIVE_STALE_SECONDS", "60")
+    monkeypatch.setenv(
+        "CODE_TERMINATOR_ECOMMERCE_REPO_URL",
+        "https://github.com/KKK985429/ecommerce-platform-demo.git",
+    )
+
+    state = _incident_state(tmp_path)
+    with patch(
+        "src.tools.call_code_worker_tool.CallCodeWorkerTool._run_real_worker_and_emit_hook",
+        return_value=None,
+    ), patch("src.app.graph.incident_registry.set_status"):
+        first = leader_node(state)
+
+    stale_accepted_at = (datetime.now(UTC) - timedelta(minutes=10)).isoformat(
+        timespec="seconds"
+    )
+    first["core_memory"]["workflow"]["code_worker_calls"][0][
+        "accepted_at"
+    ] = stale_accepted_at
+
+    with patch(
+        "src.tools.call_code_worker_tool.CallCodeWorkerTool._run_real_worker_and_emit_hook",
+        return_value=None,
+    ), patch("src.app.graph.incident_registry.set_status"):
+        second = leader_node(
+            {
+                **first,
+                "current_event": _incident_state(tmp_path)["current_event"],
+            }
+        )
+
+    calls = second["core_memory"]["workflow"]["code_worker_calls"]
+    assert len(calls) == 2
+    assert calls[0]["status"] == "stale"
+    assert calls[1]["status"] == "in_progress"

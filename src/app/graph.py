@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from datetime import UTC, datetime
 from typing import Any, TypedDict
 from uuid import uuid4
@@ -17,6 +18,7 @@ from src.memory.types import ArchivalRecord
 from src.memory.working_memory import WorkingMemory
 from src.observability import get_logger, sanitize_text
 from src.app.runtime_event_bus import RuntimeEventBus
+from src.app import incident_registry
 from src.tools.call_code_worker_tool import CallCodeWorkerTool
 
 logger = get_logger(__name__)
@@ -173,8 +175,12 @@ def leader_node(state: RuntimeState) -> RuntimeState:
                     int(existing.metadata.get("regression_count", 0) or 0) + 1
                 )
                 existing.metadata["regression_count"] = regression_count
-                should_dispatch = existing.status in ("completed", "failed")
-                if existing.status in ("completed", "failed"):
+                should_dispatch = existing.status in (
+                    "pending",
+                    "completed",
+                    "failed",
+                )
+                if existing.status in ("pending", "completed", "failed"):
                     existing.status = "pending"
                 target_task_id = existing.task_id
                 leader_hint = (
@@ -183,11 +189,15 @@ def leader_node(state: RuntimeState) -> RuntimeState:
                     f"与日志已更新到 metadata。请重新评估是否需要再次派单。"
                 )
 
-            if _has_active_code_worker_call(
+            has_active_worker = _has_active_code_worker_call(
                 core_memory=state["core_memory"],
                 task_id=target_task_id,
-            ):
+            )
+            if has_active_worker:
                 should_dispatch = False
+            elif existing is not None and existing.status == "in_progress":
+                existing.status = "pending"
+                should_dispatch = True
 
             if should_dispatch:
                 dispatch_result = _dispatch_incident_code_worker(
@@ -197,6 +207,8 @@ def leader_node(state: RuntimeState) -> RuntimeState:
                     plan_items=plan_items,
                 )
                 if dispatch_result.get("ok"):
+                    if fingerprint:
+                        incident_registry.set_status(fingerprint, "running")
                     for item in plan_items:
                         if item.task_id == target_task_id:
                             item.status = "in_progress"
@@ -440,8 +452,35 @@ def _has_active_code_worker_call(
         if str(call.get("task_id", "")).strip() != task_id:
             continue
         if str(call.get("status", "")).strip() == "in_progress":
+            if _mark_stale_code_worker_call(call):
+                continue
             return True
     return False
+
+
+def _mark_stale_code_worker_call(call: dict[str, Any]) -> bool:
+    stale_seconds_raw = (
+        os.getenv("CODEX_WORKER_ACTIVE_STALE_SECONDS", "").strip() or "900"
+    )
+    try:
+        stale_seconds = max(int(stale_seconds_raw), 60)
+    except ValueError:
+        stale_seconds = 900
+    accepted_at = str(call.get("accepted_at", "")).strip()
+    if not accepted_at:
+        return False
+    try:
+        accepted_dt = datetime.fromisoformat(accepted_at)
+        if accepted_dt.tzinfo is None:
+            accepted_dt = accepted_dt.replace(tzinfo=UTC)
+        accepted_ts = accepted_dt.astimezone(UTC).timestamp()
+    except ValueError:
+        return False
+    if datetime.now(UTC).timestamp() - accepted_ts <= stale_seconds:
+        return False
+    call["status"] = "stale"
+    call["stale_at"] = datetime.now(UTC).isoformat(timespec="seconds")
+    return True
 
 
 def _append_graph_activity(
