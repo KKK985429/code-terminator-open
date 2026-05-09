@@ -9,9 +9,11 @@ import {
 } from "react";
 
 import {
+  fetchAgentHealth,
   fetchAgentStatus,
   fetchConversation,
   fetchConversations,
+  fetchIncidents,
   fetchPlanSnapshot,
   fetchRuntimeSettings,
   saveRuntimeSettings,
@@ -19,9 +21,11 @@ import {
 } from "./api";
 import type {
   ActivityLogEntry,
+  AgentHealthResponse,
   AgentStatus,
   ChatMessage,
   ConversationSummary,
+  IncidentEntry,
   PlanItem,
   PlanSnapshotResponse,
   PlanStatus,
@@ -82,10 +86,147 @@ function mergeActivityLog(
   );
 }
 
+function incidentTitle(incident: IncidentEntry): string {
+  return `${incident.service || "unknown-service"} · ${incident.exception_type || "UnknownError"}`;
+}
+
+function incidentStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    triaged: "已识别",
+    running: "修复中",
+    waiting_review: "待 Review",
+    approved: "待部署",
+    deployed: "已部署",
+    resolved: "已解决",
+    regressed: "复发",
+    suppressed: "已忽略",
+  };
+  return labels[status] ?? status;
+}
+
+function incidentPlanStatus(
+  incident: IncidentEntry,
+  step: "dispatch" | "review" | "verify",
+): PlanStatus {
+  const status = incident.status;
+  if (step === "dispatch") {
+    if (status === "running") return "in_progress";
+    if (
+      status === "waiting_review" ||
+      status === "approved" ||
+      status === "deployed" ||
+      status === "resolved"
+    ) {
+      return "completed";
+    }
+    return "pending";
+  }
+  if (step === "review") {
+    if (status === "waiting_review" || status === "approved") return "in_progress";
+    if (status === "deployed" || status === "resolved") return "completed";
+    return "pending";
+  }
+  if (status === "deployed") return "in_progress";
+  if (status === "resolved") return "completed";
+  return "pending";
+}
+
+function buildIncidentPlan(
+  incident: IncidentEntry,
+  autoReviewMergeReload: boolean,
+): PlanItem[] {
+  const reviewLabel = autoReviewMergeReload
+    ? "自动 Review / Merge"
+    : "等待 Review / Merge";
+  return [
+    {
+      task_id: `incident-${incident.fingerprint.slice(0, 8)}-detect`,
+      content: "识别异常并建立 incident",
+      status: "completed",
+      details: `服务：${incident.service}\n异常：${incident.exception_type}\n故障指纹：${incident.fingerprint}`,
+      response: "",
+      assignee: "leader",
+      updated_at: incident.first_seen_at,
+    },
+    {
+      task_id: `incident-${incident.fingerprint.slice(0, 8)}-dispatch`,
+      content: "派发 Worker 修复代码",
+      status: incidentPlanStatus(incident, "dispatch"),
+      details: `trace_id：${incident.sample_trace_id || "unknown"}\n最近出现：${incident.last_seen_at}`,
+      response: "",
+      assignee: "worker",
+      updated_at: incident.last_seen_at,
+    },
+    {
+      task_id: `incident-${incident.fingerprint.slice(0, 8)}-review`,
+      content: reviewLabel,
+      status: incidentPlanStatus(incident, "review"),
+      details: incident.deployed_commit
+        ? `部署提交：${incident.deployed_commit}`
+        : "等待 Worker 产出分支和 PR。",
+      response: "",
+      assignee: "reviewer",
+      updated_at: incident.deployed_at || incident.last_seen_at,
+    },
+    {
+      task_id: `incident-${incident.fingerprint.slice(0, 8)}-verify`,
+      content: "热重载并验证恢复",
+      status: incidentPlanStatus(incident, "verify"),
+      details: incident.verify_window_until
+        ? `验证窗口截止：${incident.verify_window_until}`
+        : "等待部署完成后进行回归验证。",
+      response: "",
+      assignee: "leader",
+      updated_at:
+        incident.verify_window_until ||
+        incident.deployed_at ||
+        incident.last_seen_at,
+    },
+  ];
+}
+
+function buildIncidentActivity(incident: IncidentEntry): ActivityLogEntry[] {
+  const entries: ActivityLogEntry[] = [
+    {
+      entry_id: `incident-${incident.fingerprint}-created`,
+      kind: "error",
+      message: `检测到 ${incident.service} 的 ${incident.exception_type}，已累计 ${incident.occurrence_total} 次。`,
+      created_at: incident.first_seen_at,
+    },
+    {
+      entry_id: `incident-${incident.fingerprint}-running`,
+      kind: incident.status === "resolved" ? "success" : "warning",
+      message:
+        incident.status === "resolved"
+          ? "自动修复链路已完成验证，incident 已恢复。"
+          : incident.status === "deployed"
+            ? "修复已部署，正在等待热重载和验证结果。"
+            : "Planner 已派发 Worker，正在生成分支、提交和 PR。",
+      created_at: incident.last_seen_at,
+    },
+  ];
+  if (incident.deployed_at) {
+    entries.push({
+      entry_id: `incident-${incident.fingerprint}-deployed`,
+      kind: "success",
+      message: `修复已部署，commit ${incident.deployed_commit?.slice(0, 12) || "unknown"}`,
+      created_at: incident.deployed_at,
+    });
+  }
+  return entries.sort((left, right) => left.created_at.localeCompare(right.created_at));
+}
+
+function incidentTracebackPreview(traceback: string): string {
+  return traceback.split("\n").slice(0, 8).join("\n");
+}
+
 export function App() {
   const [agentStatus, setAgentStatus] = useState<AgentStatus[]>([]);
+  const [agentHealth, setAgentHealth] = useState<AgentHealthResponse | null>(null);
+  const [incidents, setIncidents] = useState<IncidentEntry[]>([]);
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string>("");
+  const [activeIncidentFingerprint, setActiveIncidentFingerprint] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [planSnapshot, setPlanSnapshot] = useState<PlanSnapshotResponse | null>(null);
   const [input, setInput] = useState("");
@@ -112,13 +253,17 @@ export function App() {
     messagesEndRef.current?.scrollIntoView({ behavior, block: "end" });
   }, []);
 
-  const refreshConversations = useCallback(async () => {
-    const [statusResp, conversationResp] = await Promise.all([
+  const refreshDashboard = useCallback(async () => {
+    const [statusResp, conversationResp, incidentResp, healthResp] = await Promise.all([
       fetchAgentStatus(),
       fetchConversations(),
+      fetchIncidents(),
+      fetchAgentHealth(),
     ]);
     setAgentStatus(statusResp.roles);
     setConversations(conversationResp.conversations);
+    setIncidents(incidentResp.incidents);
+    setAgentHealth(healthResp);
   }, []);
 
   const loadConversation = useCallback(async (conversationId: string) => {
@@ -136,7 +281,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    void refreshConversations().catch((err: Error) => setError(err.message));
+    void refreshDashboard().catch((err: Error) => setError(err.message));
     void fetchRuntimeSettings()
       .then((settings) => {
         setRuntimeSettings(settings);
@@ -147,18 +292,38 @@ export function App() {
         logBackgroundError("fetchRuntimeSettings", err);
       });
     const timer = window.setInterval(() => {
-      void refreshConversations().catch((err: Error) => {
-        logBackgroundError("refreshConversations", err);
+      void refreshDashboard().catch((err: Error) => {
+        logBackgroundError("refreshDashboard", err);
       });
     }, 5000);
     return () => window.clearInterval(timer);
-  }, [logBackgroundError, refreshConversations]);
+  }, [logBackgroundError, refreshDashboard]);
 
   useEffect(() => {
-    if (!activeConversationId && conversations.length > 0) {
+    if (
+      !activeConversationId &&
+      !activeIncidentFingerprint &&
+      conversations.length > 0
+    ) {
       setActiveConversationId(conversations[0].conversation_id);
     }
-  }, [activeConversationId, conversations]);
+  }, [activeConversationId, activeIncidentFingerprint, conversations]);
+
+  useEffect(() => {
+    if (
+      !activeConversationId &&
+      !activeIncidentFingerprint &&
+      incidents.length > 0
+    ) {
+      setActiveIncidentFingerprint(incidents[0].fingerprint);
+    }
+    if (
+      activeIncidentFingerprint &&
+      !incidents.some((item) => item.fingerprint === activeIncidentFingerprint)
+    ) {
+      setActiveIncidentFingerprint(incidents[0]?.fingerprint ?? "");
+    }
+  }, [activeConversationId, activeIncidentFingerprint, incidents]);
 
   useEffect(() => {
     if (loading) return;
@@ -205,8 +370,57 @@ export function App() {
       autoReviewMergeReloadDraft !== runtimeSettings.auto_review_merge_reload
     : githubTokenDraft.length > 0 || autoReviewMergeReloadDraft;
 
-  const planItems = planSnapshot?.plan_items ?? [];
-  const activityLog = planSnapshot?.activity_log ?? [];
+  const displayedAgents = useMemo(() => {
+    return agentStatus.filter(
+      (item) => item.role === "leader" || item.active_count > 0 || item.busy_count > 0,
+    );
+  }, [agentStatus]);
+
+  const activeIncident = useMemo(
+    () =>
+      incidents.find((incident) => incident.fingerprint === activeIncidentFingerprint) ??
+      null,
+    [activeIncidentFingerprint, incidents],
+  );
+
+  const incidentPlanSnapshot = useMemo(() => {
+    if (!activeIncident) return null;
+    return {
+      conversation_id: activeIncident.thread_id,
+      plan_items: buildIncidentPlan(
+        activeIncident,
+        autoReviewMergeReloadDraft,
+      ),
+      react_trace: [],
+      activity_log: buildIncidentActivity(activeIncident),
+      list_plan_text: "",
+      updated_at: activeIncident.last_seen_at,
+    } satisfies PlanSnapshotResponse;
+  }, [activeIncident, autoReviewMergeReloadDraft]);
+
+  const effectivePlanSnapshot =
+    planSnapshot ?? (activeConversationId ? null : incidentPlanSnapshot);
+  const effectivePlanItems = effectivePlanSnapshot?.plan_items ?? [];
+  const effectiveActivityLog = effectivePlanSnapshot?.activity_log ?? [];
+
+  const activeHeaderTitle = activeConversationId
+    ? conversationTitle(
+        conversations.find((c) => c.conversation_id === activeConversationId) ?? {
+          conversation_id: activeConversationId,
+          thread_id: "",
+          message_count: 0,
+          updated_at: "",
+        },
+      )
+    : activeIncident
+      ? `故障 ${activeIncident.fingerprint.slice(0, 8)}`
+      : "新会话";
+
+  const activeHeaderSubtitle = activeConversationId
+    ? `thread · ${activeConversationId}`
+    : activeIncident
+      ? `${incidentTitle(activeIncident)} · ${incidentStatusLabel(activeIncident.status)}`
+      : "发送第一条消息开始任务";
 
   const planStats = useMemo(() => {
     const counts: Record<PlanStatus, number> = {
@@ -215,18 +429,13 @@ export function App() {
       completed: 0,
       failed: 0,
     };
-    for (const item of planItems) counts[item.status] += 1;
+    for (const item of effectivePlanItems) counts[item.status] += 1;
     return counts;
-  }, [planItems]);
-
-  const displayedAgents = useMemo(() => {
-    return agentStatus.filter(
-      (item) => item.role === "leader" || item.active_count > 0 || item.busy_count > 0,
-    );
-  }, [agentStatus]);
+  }, [effectivePlanItems]);
 
   function startNewConversation() {
     setActiveConversationId("");
+    setActiveIncidentFingerprint("");
     setMessages([]);
     setPlanSnapshot(null);
     setInput("");
@@ -286,6 +495,7 @@ export function App() {
         onStart: (event) => {
           streamedConversationId = event.conversation_id;
           setError("");
+          setActiveIncidentFingerprint("");
           if (!activeConversationId) {
             setActiveConversationId(event.conversation_id);
           }
@@ -312,6 +522,7 @@ export function App() {
           streamedConversationId = event.conversation_id;
           setAgentStatus(event.agent_status.roles);
           setActiveConversationId(event.conversation_id);
+          setActiveIncidentFingerprint("");
           setError("");
           if (
             event.plan_items?.length ||
@@ -351,12 +562,12 @@ export function App() {
         },
       });
       try {
-        await refreshConversations();
+        await refreshDashboard();
       } catch (err) {
         if (!receivedDone) {
           throw err;
         }
-        logBackgroundError("post-send refreshConversations", err);
+        logBackgroundError("post-send refreshDashboard", err);
       }
       try {
         await loadConversation(streamedConversationId || activeConversationId);
@@ -414,9 +625,10 @@ export function App() {
                 <li key={conversation.conversation_id}>
                   <button
                     className={`conversation-item${active ? " active" : ""}`}
-                    onClick={() =>
-                      setActiveConversationId(conversation.conversation_id)
-                    }
+                    onClick={() => {
+                      setActiveConversationId(conversation.conversation_id);
+                      setActiveIncidentFingerprint("");
+                    }}
                     disabled={loading}
                     type="button"
                   >
@@ -433,6 +645,41 @@ export function App() {
             })}
             {conversations.length === 0 ? (
               <li className="conversation-empty">暂无会话</li>
+            ) : null}
+          </ul>
+        </div>
+
+        <div className="sidebar-section incident-section">
+          <div className="sidebar-section-head">
+            <span>自动修复</span>
+            <small>{incidents.length}</small>
+          </div>
+          <ul className="conversation-list incident-list">
+            {incidents.map((incident) => {
+              const active =
+                !activeConversationId &&
+                incident.fingerprint === activeIncidentFingerprint;
+              return (
+                <li key={incident.fingerprint}>
+                  <button
+                    className={`conversation-item incident-item${active ? " active" : ""}`}
+                    onClick={() => {
+                      setActiveConversationId("");
+                      setActiveIncidentFingerprint(incident.fingerprint);
+                    }}
+                    type="button"
+                  >
+                    <div className="conversation-title">{incidentTitle(incident)}</div>
+                    <div className="conversation-meta">
+                      <span>{incidentStatusLabel(incident.status)}</span>
+                      <span>{formatDateTime(incident.last_seen_at)}</span>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+            {incidents.length === 0 ? (
+              <li className="conversation-empty">暂无自动修复中的 incident</li>
             ) : null}
           </ul>
         </div>
@@ -455,25 +702,8 @@ export function App() {
       <main className="main">
         <header className="main-header">
           <div>
-            <div className="main-title">
-              {activeConversationId
-                ? conversationTitle(
-                    conversations.find(
-                      (c) => c.conversation_id === activeConversationId,
-                    ) ?? {
-                      conversation_id: activeConversationId,
-                      thread_id: "",
-                      message_count: 0,
-                      updated_at: "",
-                    },
-                  )
-                : "新会话"}
-            </div>
-            <div className="main-subtitle">
-              {activeConversationId
-                ? `thread · ${activeConversationId}`
-                : "发送第一条消息开始任务"}
-            </div>
+            <div className="main-title">{activeHeaderTitle}</div>
+            <div className="main-subtitle">{activeHeaderSubtitle}</div>
           </div>
           <div className="main-actions">
             <span className={`status-dot ${loading ? "busy" : "idle"}`} />
@@ -543,7 +773,43 @@ export function App() {
         </section>
 
         <section className="chat-feed" aria-live="polite">
-          {messages.length === 0 ? (
+          {messages.length === 0 && activeIncident ? (
+            <div className="incident-overview">
+              <div className="empty-kicker">Incident Flow</div>
+              <h2>{incidentTitle(activeIncident)}</h2>
+              <p>
+                当前状态：{incidentStatusLabel(activeIncident.status)}，已触发{" "}
+                {activeIncident.occurrence_total} 次。前端现在会直接展示自动修复链路，不再依赖聊天会话生成。
+              </p>
+              <div className="incident-summary-grid">
+                <div className="incident-summary-card">
+                  <span>故障指纹</span>
+                  <strong>{activeIncident.fingerprint}</strong>
+                </div>
+                <div className="incident-summary-card">
+                  <span>Trace ID</span>
+                  <strong>{activeIncident.sample_trace_id || "unknown"}</strong>
+                </div>
+                <div className="incident-summary-card">
+                  <span>首次发现</span>
+                  <strong>{formatDateTime(activeIncident.first_seen_at)}</strong>
+                </div>
+                <div className="incident-summary-card">
+                  <span>最近出现</span>
+                  <strong>{formatDateTime(activeIncident.last_seen_at)}</strong>
+                </div>
+              </div>
+              <section className="incident-trace-card">
+                <div className="plan-head">
+                  <span>Traceback 片段</span>
+                  <small>{activeIncident.exception_type}</small>
+                </div>
+                <pre className="incident-trace">
+                  {incidentTracebackPreview(activeIncident.sample_traceback)}
+                </pre>
+              </section>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="chat-empty">
               <div className="empty-kicker">Control Console</div>
               <h2>把复杂代码任务拆成可观察的执行流程</h2>
@@ -647,7 +913,7 @@ export function App() {
         <section className="plan-card">
           <div className="plan-head">
             <span>任务计划</span>
-            <small>{planItems.length} 项</small>
+            <small>{effectivePlanItems.length} 项</small>
           </div>
           <div className="plan-stats">
             <span className="stat state-in_progress">
@@ -662,12 +928,14 @@ export function App() {
             <span className="stat state-failed">失败 {planStats.failed}</span>
           </div>
           <ol className="plan-list">
-            {planItems.map((item) => (
+            {effectivePlanItems.map((item) => (
               <PlanRow key={item.task_id} item={item} />
             ))}
-            {planItems.length === 0 ? (
+            {effectivePlanItems.length === 0 ? (
               <li className="plan-empty">
-                还没有计划。发送一个任务描述后，主 Agent 会在这里生成执行清单。
+                {activeIncident
+                  ? "Worker 已启动，等待更多执行快照落盘。"
+                  : "还没有计划。发送一个任务描述后，主 Agent 会在这里生成执行清单。"}
               </li>
             ) : null}
           </ol>
@@ -676,18 +944,50 @@ export function App() {
         <section className="trace-card">
           <div className="plan-head">
             <span>执行日志</span>
-            <small>{activityLog.length} 条</small>
+            <small>{effectiveActivityLog.length} 条</small>
           </div>
           <ul className="activity-list">
-            {activityLog
+            {effectiveActivityLog
               .slice()
               .reverse()
               .map((entry) => (
                 <ActivityLogRow key={entry.entry_id} entry={entry} />
               ))}
-            {activityLog.length === 0 ? (
-              <li className="plan-empty">暂无执行日志</li>
+            {effectiveActivityLog.length === 0 ? (
+              <li className="plan-empty">
+                {activeIncident
+                  ? "Incident 已识别，等待 Worker 回传更详细的执行日志。"
+                  : "暂无执行日志"}
+              </li>
             ) : null}
+          </ul>
+        </section>
+
+        <section className="trace-card">
+          <div className="plan-head">
+            <span>运行态</span>
+            <small>{agentHealth?.incident_total ?? incidents.length} 个 incident</small>
+          </div>
+          <ul className="activity-list">
+            <ActivityLogRow
+              entry={{
+                entry_id: "runtime-ingest",
+                kind: agentHealth?.ingest_enabled ? "success" : "error",
+                message: agentHealth?.ingest_enabled
+                  ? "日志监听已开启"
+                  : "日志监听未开启",
+                created_at: new Date().toISOString(),
+              }}
+            />
+            <ActivityLogRow
+              entry={{
+                entry_id: "runtime-planner",
+                kind:
+                  agentHealth?.planner_active === "idle" ? "info" : "warning",
+                message: `Planner 状态：${agentHealth?.planner_active ?? "unknown"}`,
+                created_at: new Date().toISOString(),
+              }}
+            />
           </ul>
         </section>
       </aside>

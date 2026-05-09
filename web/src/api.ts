@@ -1,4 +1,5 @@
 import type {
+  AgentHealthResponse,
   AgentStatusResponse,
   ChatHistoryResponse,
   ChatStreamDeltaEvent,
@@ -6,6 +7,7 @@ import type {
   ChatStreamStartEvent,
   ChatSendResponse,
   ConversationListResponse,
+  IncidentListResponse,
   PlanSnapshotResponse,
   RuntimeSettings,
 } from "./types";
@@ -29,8 +31,16 @@ export function fetchAgentStatus(): Promise<AgentStatusResponse> {
   return request<AgentStatusResponse>("/api/agents/status");
 }
 
+export function fetchAgentHealth(): Promise<AgentHealthResponse> {
+  return request<AgentHealthResponse>("/api/agent/health");
+}
+
 export function fetchConversations(): Promise<ConversationListResponse> {
   return request<ConversationListResponse>("/api/chat/history");
+}
+
+export function fetchIncidents(): Promise<IncidentListResponse> {
+  return request<IncidentListResponse>("/api/agent/incidents");
 }
 
 export function fetchConversation(conversationId: string): Promise<ChatHistoryResponse> {
